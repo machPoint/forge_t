@@ -1,0 +1,67 @@
+/* Theme CSS Variables - Controlled by the theme system */
+:root {
+  /* These will be set dynamically by the theme manager */
+  --theme-primary-bg: #0a0a0a;
+  --theme-secondary-bg: #1a1a1a;
+  --theme-elevated-bg: #252525;
+  --theme-hover-bg: #353535;
+  --theme-active-bg: #0E2235;
+  --theme-sidebar-bg: #2d2d2d;
+  
+  --theme-primary-text: #ffffff;
+  --theme-secondary-text: #b0b0b0;
+  --theme-tertiary-text: #666666;
+  
+  --theme-primary-border: #353535;
+  --theme-secondary-border: #252525;
+  --theme-focus-border: #0E2235;
+}
+
+/* Map app-* classes to theme variables */
+.bg-app-bg-primary {
+  background-color: var(--theme-primary-bg) !important;
+}
+
+.bg-app-bg-secondary {
+  background-color: var(--theme-secondary-bg) !important;
+}
+
+.bg-app-bg-elevated {
+  background-color: var(--theme-elevated-bg) !important;
+}
+
+.bg-app-bg-hover:hover {
+  background-color: var(--theme-hover-bg) !important;
+}
+
+.bg-app-bg-active {
+  background-color: var(--theme-active-bg) !important;
+}
+
+.text-app-text-primary {
+  color: var(--theme-primary-text) !important;
+}
+
+.text-app-text-secondary {
+  color: var(--theme-secondary-text) !important;
+}
+
+.text-app-text-tertiary {
+  color: var(--theme-tertiary-text) !important;
+}
+
+.border-app-border-primary {
+  border-color: var(--theme-primary-border) !important;
+}
+
+.border-app-border-secondary {
+  border-color: var(--theme-secondary-border) !important;
+}
+
+.border-app-border-divider {
+  border-color: var(--theme-primary-border) !important;
+}
+
+.bg-app-sidebar {
+  background-color: var(--theme-sidebar-bg) !important;
+}

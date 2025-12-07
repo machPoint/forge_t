@@ -1,0 +1,495 @@
+//
+Before
+modification
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import MainNavigation from "@/components/MainNavigation";
+import AppHeader from "@/components/AppHeader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import BiographicalForm from "@/components/profile/BiographicalForm";
+import BiographicalView from "@/components/profile/BiographicalView";
+import PersonalityForm from "@/components/profile/PersonalityForm";
+import PersonalityView from "@/components/profile/PersonalityView";
+import ProfileHistory from "@/components/profile/ProfileHistory";
+import opal from "@/lib/simple-opal-client";
+
+// Define the identity profile types
+export interface BiographicalInfo {
+  name: string;
+  preferred_name: string;
+  pronouns: string;
+  age: number | null;
+  location: string;
+  cultural_background: string;
+  spiritual_orientation: string;
+  education_level: string;
+  occupation: string;
+  identity_labels: string[];
+}
+
+export interface BigFive {
+  openness: number | null;
+  conscientiousness: number | null;
+  extraversion: number | null;
+  agreeableness: number | null;
+  neuroticism: number | null;
+}
+
+export interface CognitiveStyle {
+  thinking_mode: "abstract" | "concrete" | null;
+  decision_making: "intuitive" | "analytical" | null;
+  response_tendency: "reflective" | "reactive" | null;
+}
+
+export interface EmotionalRegulation {
+  expression: "suppressed" | "moderate" | "expressive" | null;
+  coping_style: "avoidant" | "engaged" | null;
+  volatility: number | null;
+}
+
+export interface SelfConcept {
+  self_esteem: "low" | "moderate" | "high" | null;
+  identity_coherence: "stable" | "in-progress" | "fragmented" | null;
+  core_narratives: string[];
+}
+
+export interface PersonalityProfile {
+  big_five: BigFive;
+  cognitive_style: CognitiveStyle;
+  emotional_regulation: EmotionalRegulation;
+  attachment_style: "secure" | "anxious" | "avoidant" | "disorganized" | null;
+  locus_of_control: "internal" | "external" | null;
+  motivational_orientation: string[];
+  self_concept: SelfConcept;
+}
+
+export interface MetaInfo {
+  confidence_levels: {
+    big_five: number | null;
+    attachment_style: number | null;
+    motivational_orientation: number | null;
+  };
+  inference_sources: ("user_input" | "interaction_inference" | "manual_tagging")[];
+  last_updated: string;
+}
+
+export interface IdentityProfile {
+  userId: string;
+  biographical: BiographicalInfo;
+  personality_profile: PersonalityProfile;
+  meta: MetaInfo;
+}
+
+const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("biographical");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<IdentityProfile | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+
+  // Fetch the user's profile on component mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        console.log('[ProfilePage] Calling getIdentityProfile tool...');
+        const result = await opal.callTool("getIdentityProfile", {});
+        
+        // Log complete raw response for debugging
+        console.log('[ProfilePage] Raw response from getIdentityProfile:', result);
+        console.log('[ProfilePage] Response type:', typeof result);
+        console.log('[ProfilePage] Result keys:', result ? Object.keys(result).join(', ') : 'undefined');
+        
+        // Check for nullish result
+        if (!result) {
+          console.error('[ProfilePage] getIdentityProfile returned null/undefined result');
+          setError('Profile data is empty. Please try again later.');
+          setLoading(false);
+          return;
+        }
+        
+        // Check if the response contains an error message from the backend
+        if (result && result.error === true) {
+          console.error('[ProfilePage] Error from getIdentityProfile tool:', result.message);
+          setError(result.message || 'Failed to load profile. Please try again.');
+          setLoading(false);
+          return;
+        }
+        
+        // Check for expected profile structure
+        if (typeof result !== 'object') {
+          console.error('[ProfilePage] getIdentityProfile returned non-object result:', result);
+          setError('Received invalid profile format. Please try again.');
+          setLoading(false);
+          return;
+        }
+        
+        // Verify mandatory sections exist
+        if (!result.biographical || !result.personality_profile) {
+          console.error('[ProfilePage] Missing critical profile sections:', { 
+            hasBiographical: !!result.biographical, 
+            hasPersonalityProfile: !!result.personality_profile
+          });
+          setError('Profile data is incomplete. Please try again.');
+          setLoading(false);
+          return;
+        }
+        
+        // Log critical sections before proceeding
+        console.log('[ProfilePage] Biographical section:', result.biographical);
+        console.log('[ProfilePage] Personality profile section:', result.personality_profile);
+        
+        // Ensure the profile structure is complete with all required fields
+        const safeProfile = {
+          ...result,
+          biographical: {
+            name: '',
+            preferred_name: '',
+            pronouns: '',
+            age: null,
+            location: '',
+            cultural_background: '',
+            spiritual_orientation: '',
+            education_level: '',
+            occupation: '',
+            identity_labels: [],
+            ...(result?.biographical || {})
+          },
+          personality_profile: result?.personality_profile || {
+            big_five: {
+              openness: null,
+              conscientiousness: null,
+              extraversion: null,
+              agreeableness: null,
+              neuroticism: null
+            },
+            cognitive_style: {
+              thinking_mode: null,
+              decision_making: null,
+              response_tendency: null
+            },
+            emotional_regulation: {
+              expression: null,
+              coping_style: null,
+              volatility: null
+            },
+            attachment_style: null,
+            locus_of_control: null,
+            motivational_orientation: [],
+            self_concept: {
+              self_esteem: null,
+              identity_coherence: null,
+              core_narratives: []
+            }
+          },
+          meta: result?.meta || {
+            confidence_levels: {
+              big_five: null,
+              attachment_style: null,
+              motivational_orientation: null
+            },
+            inference_sources: [],
+            last_updated: new Date().toISOString()
+          }
+        };
+        
+        // Ensure identity_labels is always an array
+        if (!Array.isArray(safeProfile.biographical.identity_labels)) {
+          safeProfile.biographical.identity_labels = [];
+        }
+        
+        setProfile(safeProfile);
+        setError(null);
+        console.log("Profile loaded with safe defaults:", safeProfile);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError("Failed to load profile. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+  
+  // Retry loading the profile
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    const fetchProfile = async () => {
+      try {
+        // Add a slight delay before retry to ensure auth context is fully established
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const result = await opal.callTool("getIdentityProfile", {});
+        
+        // Check if the response contains an error message from the backend
+        if (result && result.error === true) {
+          console.error('Error from getIdentityProfile tool on retry:', result.message);
+          setError(result.message || 'Failed to load profile. Please try again.');
+          return;
+        }
+        
+        // Ensure the profile structure is complete with all required fields
+        const safeProfile = {
+          ...result,
+          biographical: {
+            name: '',
+            preferred_name: '',
+            pronouns: '',
+            age: null,
+            location: '',
+            cultural_background: '',
+            spiritual_orientation: '',
+            education_level: '',
+            occupation: '',
+            identity_labels: [],
+            ...(result?.biographical || {})
+          },
+          personality_profile: result?.personality_profile || {
+            big_five: {
+              openness: null,
+              conscientiousness: null,
+              extraversion: null,
+              agreeableness: null,
+              neuroticism: null
+            },
+            cognitive_style: {
+              thinking_mode: null,
+              decision_making: null,
+              response_tendency: null
+            },
+            emotional_regulation: {
+              expression: null,
+              coping_style: null,
+              volatility: null
+            },
+            attachment_style: null,
+            locus_of_control: null,
+            motivational_orientation: [],
+            self_concept: {
+              self_esteem: null,
+              identity_coherence: null,
+              core_narratives: []
+            }
+          },
+          meta: result?.meta || {
+            confidence_levels: {
+              big_five: null,
+              attachment_style: null,
+              motivational_orientation: null
+            },
+            inference_sources: [],
+            last_updated: new Date().toISOString()
+          }
+        };
+        
+        // Ensure identity_labels is always an array
+        if (!Array.isArray(safeProfile.biographical.identity_labels)) {
+          safeProfile.biographical.identity_labels = [];
+        }
+        
+        setProfile(safeProfile);
+        setError(null);
+        console.log("Profile loaded with safe defaults on retry:", safeProfile);
+      } catch (err) {
+        console.error("Error fetching profile on retry:", err);
+        setError("Failed to load profile. Please try again later or refresh the page.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProfile();
+  };
+
+  // Handle saving the biographical information
+  const handleSaveBiographical = async (data: BiographicalInfo) => {
+    if (!profile) return;
+    
+    try {
+      setSaving(true);
+      await opal.callTool("updateProfileSection", {
+        section: "biographical",
+        data
+      });
+      
+      // Update local state
+      setProfile({
+        ...profile,
+        biographical: data
+      });
+      
+      setError(null);
+    } catch (err) {
+      console.error("Error saving biographical info:", err);
+      setError("Failed to save biographical information. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handle saving the personality profile
+  const handleSavePersonality = async (data: PersonalityProfile) => {
+    if (!profile) return;
+    
+    try {
+      setSaving(true);
+      await opal.callTool("updateProfileSection", {
+        section: "personalityProfile",
+        data
+      });
+      
+      // Update local state
+      setProfile({
+        ...profile,
+        personality_profile: data
+      });
+      
+      setError(null);
+    } catch (err) {
+      console.error("Error saving personality profile:", err);
+      setError("Failed to save personality profile. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b sticky top-0 z-30 bg-background">
+        <div className="flex h-16 items-center px-4 justify-between">
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-semibold">OPAL</h2>
+            <div className="h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
+            <MainNavigation />
+          </div>
+          <AppHeader />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container py-6 max-w-6xl">
+        <h1 className="text-3xl font-bold mb-6">Psychological Identity Profile</h1>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <p className="mb-3">{error}</p>
+            <button 
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                handleRetry();
+              }} 
+              className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+            >
+              Retry Loading Profile
+            </button>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="biographical">Biographical</TabsTrigger>
+              <TabsTrigger value="personality">Personality Traits</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+              <TabsTrigger value="about">About This Data</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="biographical">
+              {profile && (
+                editMode ? (
+                  <BiographicalForm 
+                    data={profile.biographical} 
+                    onSave={(data) => {
+                      handleSaveBiographical(data);
+                      setEditMode(false); // Switch back to view mode after saving
+                    }}
+                    saving={saving}
+                  />
+                ) : (
+                  <BiographicalView 
+                    data={profile.biographical}
+                    onEditClick={() => setEditMode(true)}
+                  />
+                )
+              )}
+            </TabsContent>
+            
+            <TabsContent value="personality">
+              {profile && (
+                editMode ? (
+                  <PersonalityForm 
+                    personalityProfile={profile.personality_profile} 
+                    onSave={(data) => {
+                      handleSavePersonality(data);
+                      setEditMode(false); // Switch back to view mode after saving
+                    }}
+                    loading={saving}
+                  />
+                ) : (
+                  <PersonalityView 
+                    data={profile.personality_profile}
+                    onEditClick={() => setEditMode(true)}
+                  />
+                )
+              )}
+            </TabsContent>
+            
+            <TabsContent value="history">
+              <ProfileHistory 
+                onRestoreVersion={(restoredProfile) => {
+                  setProfile(restoredProfile);
+                  // Show success message
+                  setError(null);
+                }} 
+              />
+            </TabsContent>
+            
+            <TabsContent value="about">
+              <Card>
+                <CardHeader>
+                  <CardTitle>About Your Psychological Identity Profile</CardTitle>
+                  <CardDescription>
+                    This information helps OPAL understand you better and provide more personalized assistance.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p>
+                    Your psychological identity profile is stored securely on the OPAL server and is only accessible
+                    to you and the AI agents you interact with. This data is never transmitted to third parties or
+                    used for advertising or analytics.
+                  </p>
+                  <p>
+                    The profile includes information about your personality traits, cognitive style, emotional
+                    regulation, attachment style, and more. This helps OPAL's AI agents understand your preferences,
+                    communication style, and needs better.
+                  </p>
+                  <p>
+                    You can update this information at any time, and OPAL will adapt its responses accordingly.
+                  </p>
+                  {profile && profile.meta && profile.meta.last_updated && (
+                    <div className="mt-4 text-sm text-muted-foreground">
+                      <p>Last updated: {new Date(profile.meta.last_updated).toLocaleString()}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ProfilePage;

@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "id": "professional",
+    "name": "Executive Journal",
+    "version": "1.0.0",
+    "description": "Professional journaling specialization for executives and business leaders",
+    "author": "Leadership Development Corp",
+    "created": "2025-01-16",
+    "updated": "2025-01-16"
+  },
+  "app": {
+    "name": "Executive Journal",
+    "tagline": "Strategic Reflection for Leaders",
+    "description": "A professional journaling platform designed for executives, entrepreneurs, and business leaders",
+    "website": "https://executivejournal.pro",
+    "supportEmail": "support@executivejournal.pro"
+  },
+  "assets": {
+    "logo": "/assets/branding/professional/logo.png",
+    "icon": "/assets/branding/professional/icon.png",
+    "splash": "/assets/branding/professional/splash.jpg",
+    "favicon": "/assets/branding/professional/favicon.ico"
+  },
+  "theme": {
+    "colors": {
+      "primary": {
+        "50": "#f8fafc",
+        "100": "#f1f5f9",
+        "200": "#e2e8f0",
+        "300": "#cbd5e1",
+        "400": "#94a3b8",
+        "500": "#64748b",
+        "600": "#475569",
+        "700": "#334155",
+        "800": "#1e293b",
+        "900": "#0f172a",
+        "950": "#020617"
+      },
+      "accent": {
+        "50": "#fefce8",
+        "100": "#fef9c3",
+        "200": "#fef08a",
+        "300": "#fde047",
+        "400": "#facc15",
+        "500": "#eab308",
+        "600": "#ca8a04",
+        "700": "#a16207",
+        "800": "#854d0e",
+        "900": "#713f12",
+        "950": "#422006"
+      },
+      "success": "#22c55e",
+      "warning": "#f59e0b",
+      "error": "#ef4444",
+      "info": "#64748b"
+    }
+  },
+  "features": {
+    "aiFeatures": true,
+    "chatInterface": true,
+    "memorySystem": true,
+    "exportFeatures": true,
+    "guidedModules": true,
+    "customPersonas": true,
+    "themeCustomization": true,
+    "businessTemplates": true,
+    "strategicTemplates": true,
+    "therapeuticMode": false,
+    "moodTracking": false
+  },
+  "content": {
+    "welcomeMessage": "Welcome to Executive Journal - elevate your leadership through strategic reflection",
+    "aboutText": "Executive Journal is designed for business leaders who understand the power of reflection in driving strategic thinking and leadership effectiveness.",
+    "privacyStatement": "Designed for executive privacy with local storage and no external data transmission. Perfect for sensitive business reflections and strategic planning."
+  },
+  "compliance": {
+    "disclaimers": [
+      "This application is designed for personal reflection and strategic thinking.",
+      "Business decisions should be made with appropriate consultation and due diligence.",
+      "The AI features provide analytical insights but should not replace professional business advice."
+    ],
+    "prohibitedPhrases": [],
+    "requiresConsent": false
+  },
+  "windowsPackaging": {
+    "productName": "Executive Journal",
+    "companyName": "Leadership Development Corp",
+    "description": "Strategic Reflection Platform for Business Leaders",
+    "copyright": "Copyright © 2025 Leadership Development Corp"
+  }
+}

@@ -1,0 +1,73 @@
+/* Custom styles for Quill editor to make toolbar brighter and more readable */
+
+.quill-brighter-toolbar .ql-toolbar {
+  background-color: var(--app-bg-secondary) !important;
+  border-color: var(--app-border-primary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar .ql-stroke {
+  stroke: var(--app-text-secondary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar .ql-fill {
+  fill: var(--app-text-secondary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar .ql-picker {
+  color: var(--app-text-secondary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar .ql-picker-label {
+  color: var(--app-text-secondary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar .ql-picker-options {
+  background-color: var(--app-bg-tertiary) !important;
+  border-color: var(--app-border-primary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar .ql-picker-item {
+  color: var(--app-text-secondary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar button:hover .ql-stroke,
+.quill-brighter-toolbar .ql-toolbar button.ql-active .ql-stroke {
+  stroke: var(--app-text-primary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar button:hover .ql-fill,
+.quill-brighter-toolbar .ql-toolbar button.ql-active .ql-fill {
+  fill: var(--app-text-primary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar .ql-picker-label:hover,
+.quill-brighter-toolbar .ql-toolbar .ql-picker-label.ql-active {
+  color: var(--app-text-primary) !important;
+}
+
+.quill-brighter-toolbar .ql-toolbar .ql-picker-item:hover,
+.quill-brighter-toolbar .ql-toolbar .ql-picker-item.ql-selected {
+  color: var(--app-text-primary) !important;
+}
+
+/* Make toolbar buttons more visible */
+.quill-brighter-toolbar .ql-toolbar button {
+  opacity: 0.9;
+}
+
+/* Improve dropdown visibility */
+.quill-brighter-toolbar .ql-toolbar .ql-picker-label::before {
+  color: var(--app-text-secondary) !important;
+}
+
+/* Improve editor container border */
+.quill-brighter-toolbar .ql-container {
+  border-color: var(--app-border-primary) !important;
+  background-color: var(--app-bg-primary) !important;
+}
+
+/* Ensure the editor content area uses theme background */
+.quill-brighter-toolbar .ql-editor {
+  background-color: var(--app-bg-primary) !important;
+  color: var(--app-text-primary) !important;
+}

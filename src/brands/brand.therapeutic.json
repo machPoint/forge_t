@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "id": "therapeutic",
+    "name": "Mindful Journal",
+    "version": "1.0.0",
+    "description": "Therapeutic journaling specialization with enhanced mental health features",
+    "author": "Mindful Health Solutions",
+    "created": "2025-01-16",
+    "updated": "2025-01-16"
+  },
+  "app": {
+    "name": "Mindful Journal",
+    "tagline": "AI-Powered Therapeutic Reflection",
+    "description": "A therapeutic journaling platform with AI-powered insights for mental health and personal growth",
+    "website": "https://mindfuljournal.app",
+    "supportEmail": "support@mindfuljournal.app"
+  },
+  "assets": {
+    "logo": "/assets/branding/therapeutic/logo.png",
+    "icon": "/assets/branding/therapeutic/icon.png",
+    "splash": "/assets/branding/therapeutic/splash.jpg",
+    "favicon": "/assets/branding/therapeutic/favicon.ico"
+  },
+  "theme": {
+    "colors": {
+      "primary": {
+        "50": "#f0f9ff",
+        "100": "#e0f2fe",
+        "200": "#bae6fd",
+        "300": "#7dd3fc",
+        "400": "#38bdf8",
+        "500": "#0ea5e9",
+        "600": "#0284c7",
+        "700": "#0369a1",
+        "800": "#075985",
+        "900": "#0c4a6e",
+        "950": "#082f49"
+      },
+      "accent": {
+        "50": "#f0fdf4",
+        "100": "#dcfce7",
+        "200": "#bbf7d0",
+        "300": "#86efac",
+        "400": "#4ade80",
+        "500": "#22c55e",
+        "600": "#16a34a",
+        "700": "#15803d",
+        "800": "#166534",
+        "900": "#14532d",
+        "950": "#052e16"
+      },
+      "success": "#22c55e",
+      "warning": "#f59e0b",
+      "error": "#ef4444",
+      "info": "#0ea5e9"
+    }
+  },
+  "features": {
+    "therapeuticMode": true,
+    "moodTracking": true,
+    "aiFeatures": true,
+    "chatInterface": true,
+    "memorySystem": true,
+    "exportFeatures": true,
+    "guidedModules": true,
+    "customPersonas": true,
+    "themeCustomization": true,
+    "businessTemplates": false,
+    "strategicTemplates": false
+  },
+  "content": {
+    "welcomeMessage": "Welcome to Mindful Journal - your AI-powered companion for mental wellness and therapeutic reflection",
+    "aboutText": "Mindful Journal combines evidence-based therapeutic techniques with AI insights to support your mental health journey. Our platform provides a safe, private space for reflection and growth.",
+    "privacyStatement": "Your therapeutic data is completely private and stored locally. AI features are optional and only process data when explicitly requested. This application is not a substitute for professional therapy."
+  },
+  "compliance": {
+    "disclaimers": [
+      "This application is not a substitute for professional medical advice, diagnosis, or treatment.",
+      "Always seek the advice of qualified mental health professionals with questions about your mental health.",
+      "If you are experiencing a mental health crisis, please contact emergency services or a crisis hotline immediately.",
+      "The AI features provide supportive insights but are not a replacement for human therapeutic intervention."
+    ],
+    "prohibitedPhrases": [
+      "cure",
+      "diagnose",
+      "medical treatment",
+      "prescription"
+    ],
+    "requiresConsent": true
+  },
+  "windowsPackaging": {
+    "productName": "Mindful Journal",
+    "companyName": "Mindful Health Solutions",
+    "description": "AI-Powered Therapeutic Journaling Platform",
+    "copyright": "Copyright © 2025 Mindful Health Solutions"
+  }
+}

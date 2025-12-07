@@ -1,0 +1,59 @@
+/* Quill Font Styles */
+
+/* Font Family Classes */
+.ql-font-arial {
+  font-family: 'Arial', sans-serif;
+}
+
+.ql-font-helvetica {
+  font-family: 'Helvetica', sans-serif;
+}
+
+.ql-font-roboto {
+  font-family: 'Roboto', 'Arial', sans-serif;
+}
+
+.ql-font-calibri {
+  font-family: 'Calibri', 'Arial', sans-serif;
+}
+
+.ql-font-garamond {
+  font-family: 'Garamond', 'Times New Roman', serif;
+}
+
+/* Font picker dropdown styling */
+.ql-snow .ql-picker.ql-font .ql-picker-label::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item::before {
+  content: attr(data-value) !important;
+}
+
+/* Style the font picker dropdown items with their actual font */
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=arial]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=arial]::before {
+  font-family: 'Arial', sans-serif;
+  content: 'Arial' !important;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=helvetica]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=helvetica]::before {
+  font-family: 'Helvetica', sans-serif;
+  content: 'Helvetica' !important;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=roboto]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=roboto]::before {
+  font-family: 'Roboto', 'Arial', sans-serif;
+  content: 'Roboto' !important;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=calibri]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=calibri]::before {
+  font-family: 'Calibri', 'Arial', sans-serif;
+  content: 'Calibri' !important;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=garamond]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=garamond]::before {
+  font-family: 'Garamond', 'Times New Roman', serif;
+  content: 'Garamond' !important;
+}

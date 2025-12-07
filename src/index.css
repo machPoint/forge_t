@@ -1,0 +1,366 @@
+/* Local font fallbacks - no external dependencies */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  src: local('Arial'), local('Helvetica');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 700;
+  src: local('Times New Roman'), local('Georgia');
+  font-display: swap;
+}
+
+/* Import global theme overrides */
+@import './styles/global-theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Theme System CSS Variables - Using exact color palette */
+    --app-bg-primary: #0a0a0a;
+    --app-bg-secondary: #212121;
+    --app-bg-tertiary: #353535;
+    --app-bg-elevated: #353535;
+    --app-bg-hover: #667684;
+    --app-bg-active: #0E2235;
+    
+    --app-border-primary: #353535;
+    --app-border-secondary: #212121;
+    --app-border-focus: #0E2235;
+    --app-border-divider: #212121;
+    
+    --app-text-primary: #ffffff;
+    --app-text-secondary: #667684;
+    --app-text-tertiary: #353535;
+    --app-text-disabled: #212121;
+    
+    /* Shadcn UI Variables */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 12%;
+
+    --primary: 0 0% 12%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 12%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 12%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 26.1%;
+    --sidebar-primary: 0 0% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 95.9%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 91%;
+    --sidebar-ring: 0 0% 12%;
+  }
+
+  .dark {
+    /* Base colors - Using exact palette colors */
+    --background: 0 0% 3.1%; /* #080808 */
+    --foreground: 0 0% 100%; /* #ffffff */
+
+    /* Card colors - Using exact palette colors */
+    --card: 0 0% 20.8%; /* #353535 */
+    --card-foreground: 0 0% 100%; /* #ffffff */
+
+    /* Popover colors - Using exact palette */
+    --popover: 0 0% 20.8%; /* #353535 */
+    --popover-foreground: 0 0% 100%; /* #ffffff */
+
+    /* Primary colors - Using exact palette */
+    --primary: 0 0% 100%; /* #ffffff */
+    --primary-foreground: 0 0% 3.1%; /* #080808 */
+
+    /* Secondary colors - Using exact palette */
+    --secondary: 0 0% 12.9%; /* #212121 */
+    --secondary-foreground: 0 0% 100%; /* #ffffff */
+
+    /* Muted colors - Using exact palette */
+    --muted: 0 0% 12.9%; /* #212121 */
+    --muted-foreground: 200 14% 46%; /* #667684 */
+
+    /* Accent colors - Using exact palette */
+    --accent: 0 0% 12.9%; /* #212121 */
+    --accent-foreground: 0 0% 100%; /* #ffffff */
+
+    /* Destructive colors */
+    --destructive: 0 62.8% 30.6%; /* #991b1b */
+    --destructive-foreground: 0 0% 92%; /* #eaeaea */
+
+    /* Border, input, and ring colors - Using exact palette */
+    --border: 0 0% 20.8%; /* #353535 */
+    --input: 0 0% 12.9%; /* #212121 */
+    --ring: 0 0% 100%; /* #ffffff */
+
+    /* Sidebar colors - Using exact palette */
+    --sidebar-background: 0 0% 3.1%; /* #080808 */
+    --sidebar-foreground: 0 0% 100%; /* #ffffff */
+    --sidebar-primary: 0 0% 100%; /* #ffffff */
+    --sidebar-primary-foreground: 0 0% 3.1%; /* #080808 */
+    --sidebar-accent: 0 0% 12.9%; /* #212121 */
+    --sidebar-accent-foreground: 0 0% 100%; /* #ffffff */
+    --sidebar-border: 0 0% 20.8%; /* #353535 */
+    --sidebar-ring: 0 0% 100%; /* #ffffff */
+    
+    /* App-specific colors */
+    --app-header-bg: 0 0% 12%; /* #1d1d1d */
+    --app-content-from: 0 0% 10%; /* #1a1a1a */
+    --app-content-to: 0 0% 16%; /* #2a2a2a */
+    --app-divider: 0 0% 14%; /* #232323 */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }
+
+  .journal-content {
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* ReactQuill Editor Styles */
+  .ql-container {
+    @apply font-playfair text-base flex-1 !important;
+    font-size: 16px !important; 
+  }
+
+  .ql-editor {
+    @apply flex-1 !important;
+    font-family: 'Playfair Display', serif !important;
+    line-height: 1.6 !important;
+    padding: 0 !important;
+    min-height: auto !important; /* Remove the fixed min-height */
+    height: 100% !important; /* Fill available height */
+  }
+
+  .ql-editor p, 
+  .ql-editor h1, 
+  .ql-editor h2, 
+  .ql-editor h3 {
+    @apply mb-3 !important;
+  }
+
+  .ql-editor h1 {
+    @apply text-2xl font-semibold !important;
+  }
+
+  .ql-editor h2 {
+    @apply text-xl font-semibold !important;
+  }
+
+  .ql-editor h3 {
+    @apply text-lg font-semibold !important;
+  }
+
+  .ql-toolbar {
+    border: 1px solid var(--app-border-primary) !important;
+    border-radius: 4px 4px 0 0 !important;
+    background-color: var(--app-bg-secondary) !important;
+    color: var(--app-text-secondary) !important;
+  }
+
+  .ql-toolbar .ql-picker-label, .ql-toolbar .ql-picker-item, .ql-toolbar button {
+    color: var(--app-text-secondary) !important;
+    fill: var(--app-text-secondary) !important;
+    stroke: var(--app-text-secondary) !important;
+  }
+
+  .ql-toolbar .ql-picker-options {
+    background-color: var(--app-bg-tertiary) !important;
+    border-color: var(--app-border-primary) !important;
+  }
+
+  .ql-container {
+    border: 1px solid var(--app-border-primary) !important;
+    border-top: none !important;
+    border-radius: 0 0 4px 4px !important;
+    background-color: var(--app-bg-primary) !important;
+    color: var(--app-text-primary) !important;
+  }
+
+  .ql-editor {
+    color: var(--app-text-primary) !important;
+    background-color: var(--app-bg-primary) !important;
+  }
+
+  .ql-snow .ql-stroke {
+    stroke: var(--app-text-secondary) !important;
+  }
+
+  .ql-snow .ql-fill {
+    fill: var(--app-text-secondary) !important;
+  }
+
+  .ql-snow .ql-picker {
+    color: var(--app-text-secondary) !important;
+  }
+
+  .ql-snow .ql-picker-options {
+    background-color: var(--app-bg-tertiary) !important;
+    border-color: var(--app-border-primary) !important;
+  }
+
+  /* Glass morphism */
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-gray-900/70 backdrop-blur-md border border-gray-800/30;
+  }
+}
+
+@layer utilities {
+  /* Entry card animations */
+  .entry-card {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .entry-card:hover {
+    @apply translate-x-1;
+  }
+
+  /* Fade transitions */
+  .fade-in {
+    @apply transition-opacity duration-300 ease-in-out opacity-100;
+  }
+
+  .fade-out {
+    @apply transition-opacity duration-300 ease-in-out opacity-0;
+  }
+  
+  /* App Layout Utilities */
+  .app-layout {
+    @apply min-h-screen bg-background text-foreground;
+  }
+  
+  .app-header {
+    height: 3.5rem;
+    border-bottom: 1px solid var(--app-border-primary);
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--app-bg-secondary);
+    backdrop-filter: blur(8px);
+  }
+  
+  .app-content {
+    flex: 1;
+    background-color: var(--app-bg-primary);
+  }
+  
+  .app-container {
+    @apply container py-8;
+  }
+  
+  .app-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--app-text-primary);
+  }
+  
+  .app-divider {
+    height: 1.5rem;
+    width: 1px;
+    background-color: var(--app-border-primary);
+  }
+  
+  /* Card Utilities */
+  .app-card {
+    background-color: var(--app-bg-elevated);
+    border: 1px solid var(--app-border-primary);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  
+  /* Button Utilities */
+  .app-button-primary {
+    background-color: var(--app-bg-secondary);
+    color: var(--app-text-primary);
+  }
+  
+  .app-button-primary:hover {
+    background-color: var(--app-bg-tertiary);
+  }
+  
+  .app-button-secondary {
+    background-color: transparent;
+    color: var(--app-text-primary);
+    border: 1px solid var(--app-border-primary);
+  }
+  
+  .app-button-secondary:hover {
+    background-color: var(--app-bg-secondary);
+  }
+
+  /* Custom Scrollbar Styles - Dark and Subtle */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.3); /* Very subtle gray */
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.5); /* Slightly more visible on hover */
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Firefox scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(75, 85, 99, 0.3) transparent;
+  }
+}

@@ -1,0 +1,78 @@
+/* Simple Global Theme - Force everything to use consistent dark background */
+
+/* Force the exact dark color everywhere */
+html, body {
+  background-color: #0a0a0a !important;
+  color: #ffffff !important;
+}
+
+/* Force all main layout classes to use the same dark color */
+.page-container,
+.forge-page,
+.forge-app,
+.bg-app-bg-primary,
+[class*="page-container"],
+[class*="forge-page"],
+[class*="forge-app"] {
+  background-color: #0a0a0a !important;
+}
+
+/* Force all flex containers to use the same color */
+.flex, .flex-1, .min-h-0,
+.h-screen, .flex-col {
+  background-color: #0a0a0a !important;
+}
+
+/* Force Tailwind background utilities to use theme */
+.bg-white, .bg-gray-50, .bg-gray-100, .bg-gray-200, .bg-gray-300, .bg-gray-400, .bg-gray-500,
+.bg-gray-600, .bg-gray-700, .bg-gray-800, .bg-gray-900, .bg-black,
+.dark\:bg-white, .dark\:bg-gray-50, .dark\:bg-gray-100, .dark\:bg-gray-200, .dark\:bg-gray-300,
+.dark\:bg-gray-400, .dark\:bg-gray-500, .dark\:bg-gray-600, .dark\:bg-gray-700, .dark\:bg-gray-800,
+.dark\:bg-gray-900, .dark\:bg-black {
+  background-color: var(--app-bg-secondary) !important;
+}
+
+/* Force any element with green-ish background to use theme */
+[style*="background"][style*="#0f1410"],
+[style*="background"][style*="#1a1f1a"],
+[style*="background"][style*="#1f2420"] {
+  background-color: var(--app-bg-primary) !important;
+}
+
+/* Force sidebar backgrounds */
+[class*="sidebar"], [class*="Sidebar"],
+[class*="navigation"], [class*="Navigation"] {
+  background-color: var(--app-bg-primary) !important;
+}
+
+/* Force content area backgrounds */
+[class*="content"], [class*="Content"],
+[class*="main"], [class*="Main"] {
+  background-color: var(--app-bg-primary) !important;
+}
+
+/* Specific shadcn/ui Card component overrides */
+[data-sonner-toaster],
+[data-radix-scroll-area-viewport],
+[data-radix-collection-item] {
+  background-color: var(--app-bg-elevated) !important;
+}
+
+/* Force ReactQuill editor backgrounds */
+.ql-editor, .ql-container {
+  background-color: var(--app-bg-primary) !important;
+  color: var(--app-text-primary) !important;
+}
+
+/* Force any remaining hardcoded backgrounds */
+* {
+  --tw-bg-opacity: 1 !important;
+}
+
+/* Override any CSS custom properties that might conflict */
+:root {
+  --background: var(--app-bg-primary) !important;
+  --foreground: var(--app-text-primary) !important;
+  --card: var(--app-bg-elevated) !important;
+  --card-foreground: var(--app-text-primary) !important;
+}
