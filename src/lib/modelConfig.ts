@@ -5,15 +5,16 @@ export interface ModelConfig {
   provider: 'openai' | 'anthropic' | 'grok';
 }
 
+// Default models as fallback - actual models are fetched dynamically from OpenAI API
 export const AVAILABLE_MODELS: ModelConfig[] = [
   {
-    id: 'gpt-4o-2024-08-06',
+    id: 'gpt-4o',
     name: 'GPT-4o',
     description: 'Latest, most capable model',
     provider: 'openai'
   },
   {
-    id: 'gpt-4o-mini-2024-07-18',
+    id: 'gpt-4o-mini',
     name: 'GPT-4o-mini', 
     description: 'Faster, cost-effective version',
     provider: 'openai'
@@ -21,7 +22,7 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
 ];
 
 export const getSelectedModel = (): string => {
-  const model = localStorage.getItem('selectedAIModel') || 'gpt-4o-2024-08-06';
+  const model = localStorage.getItem('selectedAIModel') || 'gpt-4o';
   console.log('[ModelConfig] Getting selected model:', model);
   return model;
 };

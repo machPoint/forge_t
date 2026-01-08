@@ -44,6 +44,10 @@ interface JournalEditorProps {
   onCancel?: () => void;
   autoSave?: boolean;
   className?: string;
+  onSaveToCore?: () => void;
+  onFeedbackRequest?: () => void;
+  saveToMemoryRef?: React.MutableRefObject<(() => Promise<void>) | undefined>;
+  generateFeedbackRef?: React.MutableRefObject<(() => Promise<void>) | undefined>;
 }
 
 export const JournalEditor: React.FC<JournalEditorProps> = ({
@@ -52,7 +56,11 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
   onSave,
   onCancel,
   autoSave = true,
-  className = ''
+  className = '',
+  onSaveToCore,
+  onFeedbackRequest,
+  saveToMemoryRef,
+  generateFeedbackRef
 }) => {
   const [title, setTitle] = useState(entry?.title || '');
   const [content, setContent] = useState(entry?.content || '');
@@ -98,6 +106,44 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
       setIsSaving(false);
     }
   }, [isSaving, entry, title, content, tags, template?.id, onSave]);
+
+  // Expose save function to parent via ref if provided
+  useEffect(() => {
+    if (saveToMemoryRef) {
+      // @ts-ignore
+      saveToMemoryRef.current = async () => {
+        if (onSaveToCore) onSaveToCore();
+      };
+    }
+    if (generateFeedbackRef) {
+      // @ts-ignore
+      generateFeedbackRef.current = async () => {
+        if (onFeedbackRequest) onFeedbackRequest();
+      };
+    }
+  }, [saveToMemoryRef, generateFeedbackRef, onSaveToCore, onFeedbackRequest]);
+
+  // Listen for custom events from TopNavigation
+  useEffect(() => {
+    const handleTriggerSave = () => handleSave();
+    const handleTriggerSaveToCore = () => {
+        if (onSaveToCore) onSaveToCore();
+    };
+    const handleTriggerAiFeedback = () => {
+        if (onFeedbackRequest) onFeedbackRequest();
+    };
+
+    window.addEventListener('trigger-save-entry', handleTriggerSave);
+    window.addEventListener('trigger-save-to-core', handleTriggerSaveToCore);
+    window.addEventListener('trigger-ai-feedback', handleTriggerAiFeedback);
+
+    return () => {
+      window.removeEventListener('trigger-save-entry', handleTriggerSave);
+      window.removeEventListener('trigger-save-to-core', handleTriggerSaveToCore);
+      window.removeEventListener('trigger-ai-feedback', handleTriggerAiFeedback);
+    };
+  }, [handleSave, onSaveToCore, onFeedbackRequest]);
+
 
   // Auto-save functionality
   useEffect(() => {
@@ -181,7 +227,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter your journal title..."
-            className="text-xl font-semibold border-none shadow-none px-0 focus-visible:ring-0"
+            className="text-xl font-semibold border-none shadow-none px-0 focus-visible:ring-0 text-foreground placeholder:text-muted-foreground"
             style={{ fontFamily: themeConfig.fonts.journal }}
           />
         </div>
@@ -243,7 +289,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
               "Follow the template prompts above or write freely..." : 
               "Start writing your thoughts..."
             }
-            className="min-h-[400px] resize-none border-none shadow-none px-0 focus-visible:ring-0"
+            className="min-h-[400px] resize-none border-none shadow-none px-0 focus-visible:ring-0 text-foreground placeholder:text-muted-foreground"
             style={{ fontFamily: themeConfig.fonts.journal }}
           />
         </div>

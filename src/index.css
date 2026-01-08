@@ -15,32 +15,33 @@
   font-display: swap;
 }
 
-/* Import global theme overrides */
-@import './styles/global-theme.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Theme System CSS Variables - Using exact color palette */
-    --app-bg-primary: #0a0a0a;
-    --app-bg-secondary: #212121;
-    --app-bg-tertiary: #353535;
-    --app-bg-elevated: #353535;
-    --app-bg-hover: #667684;
-    --app-bg-active: #0E2235;
+    /* 
+     * Legacy --app-* variables now reference dynamic theme variables.
+     * These are kept for backward compatibility with components that still use them.
+     * New components should use the theme variables directly (bg-background, text-foreground, etc.)
+     */
+    --app-bg-primary: hsl(var(--background));
+    --app-bg-secondary: hsl(var(--card));
+    --app-bg-tertiary: hsl(var(--secondary));
+    --app-bg-elevated: hsl(var(--card));
+    --app-bg-hover: hsl(var(--accent));
+    --app-bg-active: hsl(var(--accent));
     
-    --app-border-primary: #353535;
-    --app-border-secondary: #212121;
-    --app-border-focus: #0E2235;
-    --app-border-divider: #212121;
+    --app-border-primary: hsl(var(--border));
+    --app-border-secondary: hsl(var(--border));
+    --app-border-focus: hsl(var(--ring));
+    --app-border-divider: hsl(var(--border));
     
-    --app-text-primary: #ffffff;
-    --app-text-secondary: #667684;
-    --app-text-tertiary: #353535;
-    --app-text-disabled: #212121;
+    --app-text-primary: hsl(var(--foreground));
+    --app-text-secondary: hsl(var(--muted-foreground));
+    --app-text-tertiary: hsl(var(--muted-foreground) / 0.7);
+    --app-text-disabled: hsl(var(--muted-foreground) / 0.5);
     
     /* Shadcn UI Variables */
     --background: 0 0% 98%;
@@ -83,60 +84,12 @@
     --sidebar-ring: 0 0% 12%;
   }
 
-  .dark {
-    /* Base colors - Using exact palette colors */
-    --background: 0 0% 3.1%; /* #080808 */
-    --foreground: 0 0% 100%; /* #ffffff */
-
-    /* Card colors - Using exact palette colors */
-    --card: 0 0% 20.8%; /* #353535 */
-    --card-foreground: 0 0% 100%; /* #ffffff */
-
-    /* Popover colors - Using exact palette */
-    --popover: 0 0% 20.8%; /* #353535 */
-    --popover-foreground: 0 0% 100%; /* #ffffff */
-
-    /* Primary colors - Using exact palette */
-    --primary: 0 0% 100%; /* #ffffff */
-    --primary-foreground: 0 0% 3.1%; /* #080808 */
-
-    /* Secondary colors - Using exact palette */
-    --secondary: 0 0% 12.9%; /* #212121 */
-    --secondary-foreground: 0 0% 100%; /* #ffffff */
-
-    /* Muted colors - Using exact palette */
-    --muted: 0 0% 12.9%; /* #212121 */
-    --muted-foreground: 200 14% 46%; /* #667684 */
-
-    /* Accent colors - Using exact palette */
-    --accent: 0 0% 12.9%; /* #212121 */
-    --accent-foreground: 0 0% 100%; /* #ffffff */
-
-    /* Destructive colors */
-    --destructive: 0 62.8% 30.6%; /* #991b1b */
-    --destructive-foreground: 0 0% 92%; /* #eaeaea */
-
-    /* Border, input, and ring colors - Using exact palette */
-    --border: 0 0% 20.8%; /* #353535 */
-    --input: 0 0% 12.9%; /* #212121 */
-    --ring: 0 0% 100%; /* #ffffff */
-
-    /* Sidebar colors - Using exact palette */
-    --sidebar-background: 0 0% 3.1%; /* #080808 */
-    --sidebar-foreground: 0 0% 100%; /* #ffffff */
-    --sidebar-primary: 0 0% 100%; /* #ffffff */
-    --sidebar-primary-foreground: 0 0% 3.1%; /* #080808 */
-    --sidebar-accent: 0 0% 12.9%; /* #212121 */
-    --sidebar-accent-foreground: 0 0% 100%; /* #ffffff */
-    --sidebar-border: 0 0% 20.8%; /* #353535 */
-    --sidebar-ring: 0 0% 100%; /* #ffffff */
-    
-    /* App-specific colors */
-    --app-header-bg: 0 0% 12%; /* #1d1d1d */
-    --app-content-from: 0 0% 10%; /* #1a1a1a */
-    --app-content-to: 0 0% 16%; /* #2a2a2a */
-    --app-divider: 0 0% 14%; /* #232323 */
-  }
+  /* 
+   * NOTE: Dark theme colors are now set dynamically by ThemeProvider.
+   * Do NOT add a .dark {} block here as it will override theme selection.
+   * The ThemeProvider in src/components/ThemeProvider.tsx sets CSS variables
+   * based on the selected theme from src/lib/themeConfig.ts
+   */
 }
 
 @layer base {

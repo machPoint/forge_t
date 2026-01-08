@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listen } from '@tauri-apps/api/event';
-import RibbonMenu from './RibbonMenu';
+import TopNavigation from './TopNavigation';
 
 const MenuHandler = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const MenuHandler = () => {
     };
   }, [navigate]);
 
-  return <RibbonMenu />;
+  return <TopNavigation />;
 };
 
 export default MenuHandler;

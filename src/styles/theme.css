@@ -1,232 +1,97 @@
-/* Forge Theme System - Global CSS Variables */
+/* 
+ * Forge Theme System - Dynamic Theme Support
+ * 
+ * This file provides utility classes that use the dynamic CSS variables
+ * set by ThemeProvider. Do NOT hardcode colors here - use hsl(var(--*)) instead.
+ */
+
+/* Spacing utilities */
 :root {
-  /* Background Gradients */
-  --forge-bg-primary: #111111;
-  --forge-bg-secondary: #1a1a1a;
-  --forge-bg-sidebar: #1d1d1d;
-  
-  /* Border Colors */
-  --forge-border-primary: #23232a;
-  --forge-border-secondary: #4b5563;
-  --forge-border-focus: #4b5563;
-  
-  /* Text Colors */
-  --forge-text-primary: #f3f4f6;
-  --forge-text-secondary: #9ca3af;
-  --forge-text-muted: #6b7280;
-  
-  /* Button Colors - Journal Page Standard */
-  --forge-button-primary: #3b82f6;
-  --forge-button-primary-hover: #2563eb;
-  --forge-button-secondary: #374151;
-  --forge-button-secondary-hover: #4b5563;
-  
-  /* Component Backgrounds */
-  --forge-card-bg: rgba(29, 29, 29, 0.8);
-  --forge-input-bg: rgba(45, 45, 45, 0.6);
-  
-  /* Border Radius - Journal Page Standard */
-  --forge-radius-sm: 0;
-  --forge-radius-md: 0;
-  --forge-radius-lg: 0;
-  
-  /* Spacing */
   --forge-spacing-xs: 0.25rem;
   --forge-spacing-sm: 0.5rem;
   --forge-spacing-md: 1rem;
   --forge-spacing-lg: 1.5rem;
   --forge-spacing-xl: 2rem;
-  
-  /* Typography */
-  --forge-font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  --forge-font-size-xs: 0.75rem;
-  --forge-font-size-sm: 0.875rem;
-  --forge-font-size-base: 1rem;
-  --forge-font-size-lg: 1.125rem;
-  --forge-font-size-xl: 1.25rem;
-  --forge-font-size-2xl: 1.5rem;
-  --forge-font-size-3xl: 1.875rem;
 }
 
-/* Global Application Styles */
+/* Global Application Styles - Uses dynamic theme variables */
 .forge-app {
-  background: var(--forge-bg-primary) !important;
-  color: var(--forge-text-primary) !important;
-  font-family: var(--forge-font-family);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   min-height: 100vh;
 }
 
 .forge-page {
-  background: var(--forge-bg-secondary) !important;
-  min-height: calc(100vh - 4rem); /* Account for ribbon */
+  background: hsl(var(--background));
+  min-height: calc(100vh - 4rem);
 }
 
-/* Force all elements to use theme colors */
-* {
-  --tw-bg-opacity: 1 !important;
-}
-
-/* Override all dark backgrounds */
-.dark\:bg-gray-900, .bg-gray-900,
-.dark\:bg-gray-800, .bg-gray-800,
-.dark\:bg-gray-700, .bg-gray-700,
-.dark\:bg-slate-900, .bg-slate-900,
-.dark\:bg-slate-800, .bg-slate-800 {
-  background-color: var(--forge-bg-primary) !important;
-}
-
-.dark\:bg-gray-50, .bg-gray-50,
-.dark\:bg-gray-100, .bg-gray-100 {
-  background-color: var(--forge-bg-secondary) !important;
-}
-
-/* Override text colors */
-.dark\:text-gray-100, .text-gray-100,
-.dark\:text-white, .text-white {
-  color: var(--forge-text-primary) !important;
-}
-
-.dark\:text-gray-400, .text-gray-400,
-.dark\:text-gray-300, .text-gray-300 {
-  color: var(--forge-text-secondary) !important;
-}
-
+/* Sidebar styling using theme variables */
 .forge-sidebar {
-  background: var(--forge-bg-sidebar);
-  border-right: 1px solid var(--forge-border-primary);
-  color: var(--forge-text-primary);
+  background: hsl(var(--sidebar-background));
+  border-right: 1px solid hsl(var(--border));
+  color: hsl(var(--sidebar-foreground));
 }
 
+/* Card styling using theme variables */
 .forge-card {
-  background: var(--forge-card-bg);
-  border: 1px solid var(--forge-border-primary);
-  border-radius: 0;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
 }
 
+/* Input styling using theme variables */
 .forge-input {
-  background: var(--forge-input-bg);
-  border: 1px solid var(--forge-border-primary);
-  color: var(--forge-text-primary);
+  background: hsl(var(--input));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  border-radius: var(--radius);
 }
 
 .forge-input:focus {
-  border-color: var(--forge-border-focus);
+  border-color: hsl(var(--ring));
   outline: none;
-  box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
 }
 
+/* Button styling using theme variables */
 .forge-button {
-  background: var(--forge-button-secondary);
-  border: 1px solid var(--forge-border-primary);
-  color: var(--forge-text-primary);
-  border-radius: 0;
+  background: hsl(var(--secondary));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--secondary-foreground));
+  border-radius: var(--radius);
   transition: all 0.2s ease;
 }
 
 .forge-button:hover {
-  background: var(--forge-button-secondary-hover);
+  background: hsl(var(--accent));
 }
 
 .forge-button-primary {
-  background: var(--forge-button-primary);
-  color: white;
-  border: 1px solid var(--forge-button-primary);
-  border-radius: 0;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid hsl(var(--primary));
+  border-radius: var(--radius);
 }
 
 .forge-button-primary:hover {
-  background: var(--forge-button-primary-hover);
-  border-color: var(--forge-button-primary-hover);
+  background: hsl(var(--primary) / 0.9);
 }
 
+/* Text color utilities using theme variables */
 .forge-text-primary {
-  color: var(--forge-text-primary);
+  color: hsl(var(--foreground));
 }
 
 .forge-text-secondary {
-  color: var(--forge-text-secondary);
+  color: hsl(var(--muted-foreground));
 }
 
 .forge-text-muted {
-  color: var(--forge-text-muted);
+  color: hsl(var(--muted-foreground) / 0.7);
 }
 
-/* Override Tailwind classes with theme variables */
-.bg-forge-primary {
-  background: var(--forge-bg-primary) !important;
-}
-
-.bg-forge-secondary {
-  background: var(--forge-bg-secondary) !important;
-}
-
-.bg-forge-sidebar {
-  background: var(--forge-bg-sidebar) !important;
-}
-
-/* Force override hardcoded Tailwind backgrounds using attribute selectors */
-[class*="bg-[#111111]"], [class*="bg-[#222222]"], [class*="bg-[#1a1a1a]"], [class*="bg-[#2a2a2a]"], [class*="bg-[#18181b]"], [class*="bg-[#1d1d1d]"] {
-  background: var(--forge-bg-primary) !important;
-}
-
-[class*="bg-[#23232a]"], [class*="bg-[#2d2d2d]"], [class*="bg-[#333333]"] {
-  background: var(--forge-bg-secondary) !important;
-}
-
-/* Override specific hardcoded colors */
-[style*="background: #111111"], [style*="background-color: #111111"],
-[style*="background: #1a1a1a"], [style*="background-color: #1a1a1a"],
-[style*="background: #18181b"], [style*="background-color: #18181b"] {
-  background: var(--forge-bg-primary) !important;
-}
-
+/* Border utilities using theme variables */
 .border-forge {
-  border-color: var(--forge-border-primary);
-}
-
-.text-forge-primary {
-  color: var(--forge-text-primary);
-}
-
-.text-forge-secondary {
-  color: var(--forge-text-secondary);
-}
-
-.text-forge-muted {
-  color: var(--forge-text-muted);
-}
-
-/* Global Button Overrides - Apply Journal Page Standards */
-.btn, button, [role="button"] {
-  border-radius: 0 !important;
-}
-
-/* Primary buttons should be blue like Journal page */
-.bg-purple-600, .bg-purple-700 {
-  background: var(--forge-button-primary) !important;
-}
-
-.hover\:bg-purple-700:hover, .hover\:bg-purple-600:hover {
-  background: var(--forge-button-primary-hover) !important;
-}
-
-/* Ensure all cards have square corners */
-.rounded, .rounded-lg, .rounded-md {
-  border-radius: 0 !important;
-}
-
-/* Tab styling consistency */
-.tabs-list, [role="tablist"] {
-  border-radius: 0;
-}
-
-/* Input styling consistency */
-input, textarea, select {
-  border-radius: 0 !important;
-  border-color: var(--forge-border-primary) !important;
-}
-
-input:focus, textarea:focus, select:focus {
-  border-color: var(--forge-border-focus) !important;
-  box-shadow: 0 0 0 2px rgba(75, 85, 99, 0.2) !important;
+  border-color: hsl(var(--border));
 }

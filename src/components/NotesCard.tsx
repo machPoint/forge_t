@@ -99,9 +99,9 @@ const NotesCard: React.FC = () => {
   };
 
   const NoteItem: React.FC<{ note: Note }> = ({ note }) => (
-    <div className="p-3 bg-[#3e3e42] hover:bg-[#4e4e52] rounded transition-colors border border-gray-600">
+    <div className="p-3 bg-secondary hover:bg-accent rounded transition-colors border border-border">
       <div className="flex items-start justify-between mb-2">
-        <h4 className="text-white font-medium text-sm truncate flex-1 mr-2">
+        <h4 className="text-foreground font-medium text-sm truncate flex-1 mr-2">
           {note.title}
         </h4>
         <div className="flex items-center gap-1">
@@ -109,7 +109,7 @@ const NotesCard: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => togglePinNote(note.id)}
-            className={`text-white ${note.isPinned ? 'text-blue-400 hover:text-blue-500' : 'hover:text-blue-400'} h-6 w-6 p-0`}
+            className={`text-foreground ${note.isPinned ? 'text-primary hover:text-primary/80' : 'hover:text-primary'} h-6 w-6 p-0`}
           >
             <Pin className="w-3 h-3" fill={note.isPinned ? 'currentColor' : 'none'} />
           </Button>
@@ -117,7 +117,7 @@ const NotesCard: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => toggleArchiveNote(note.id)}
-            className="text-white hover:text-gray-200 h-6 w-6 p-0"
+            className="text-foreground hover:text-muted-foreground h-6 w-6 p-0"
           >
             <Archive className="w-3 h-3" />
           </Button>
@@ -125,7 +125,7 @@ const NotesCard: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => openEditDialog(note)}
-            className="text-white hover:text-yellow-400 h-6 w-6 p-0"
+            className="text-foreground hover:text-accent-foreground h-6 w-6 p-0"
           >
             <Edit className="w-3 h-3" />
           </Button>
@@ -133,16 +133,16 @@ const NotesCard: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => handleDeleteNote(note.id)}
-            className="text-white hover:text-red-400 h-6 w-6 p-0"
+            className="text-foreground hover:text-destructive h-6 w-6 p-0"
           >
             <Trash2 className="w-3 h-3" />
           </Button>
         </div>
       </div>
-      <p className="text-gray-300 text-xs leading-relaxed line-clamp-2">
+      <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2">
         {note.content}
       </p>
-      <p className="text-gray-500 text-xs mt-2">
+      <p className="text-muted-foreground/70 text-xs mt-2">
         {new Date(note.updatedAt).toLocaleDateString()}
       </p>
     </div>
@@ -150,10 +150,10 @@ const NotesCard: React.FC = () => {
 
   return (
     <>
-      <Card className="bg-[#2d2d2d] border-gray-600">
+      <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-white flex items-center text-lg">
+            <CardTitle className="text-foreground flex items-center text-lg">
               <StickyNote className="w-5 h-5 mr-2 text-green-400" />
               Notes
             </CardTitle>
@@ -162,39 +162,39 @@ const NotesCard: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-white hover:text-green-400 h-8 w-8 p-0"
+                  className="text-foreground hover:text-primary h-8 w-8 p-0"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-[#2d2d2d] border-gray-600">
+              <DialogContent className="bg-card border-border">
                 <DialogHeader>
-                  <DialogTitle className="text-white">Create New Note</DialogTitle>
+                  <DialogTitle className="text-foreground">Create New Note</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <Input
                     placeholder="Note title (optional)"
                     value={newNote.title}
                     onChange={(e) => setNewNote(prev => ({ ...prev, title: e.target.value }))}
-                    className="bg-[#3e3e42] border-gray-600 text-white placeholder:text-gray-400"
+                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
                   />
                   <Textarea
                     placeholder="Write your note here..."
                     value={newNote.content}
                     onChange={(e) => setNewNote(prev => ({ ...prev, content: e.target.value }))}
-                    className="bg-[#3e3e42] border-gray-600 text-white placeholder:text-gray-400 min-h-[120px]"
+                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground min-h-[120px]"
                   />
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="outline"
                       onClick={() => setIsCreateDialogOpen(false)}
-                      className="border-gray-600 text-gray-300 hover:bg-[#3e3e42]"
+                      className="border-border text-muted-foreground hover:bg-secondary"
                     >
                       Cancel
                     </Button>
                     <Button
                       onClick={handleCreateNote}
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       <Save className="w-4 h-4 mr-2" />
                       Create Note
@@ -208,7 +208,7 @@ const NotesCard: React.FC = () => {
         <CardContent>
           {pinnedNotes.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-sm font-medium text-blue-400 mb-2 flex items-center">
+              <h4 className="text-sm font-medium text-primary mb-2 flex items-center">
                 <Pin className="w-3 h-3 mr-1" />
                 Pinned Notes
               </h4>
@@ -222,7 +222,7 @@ const NotesCard: React.FC = () => {
           
           {recentNotes.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Recent Notes</h4>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Recent Notes</h4>
               <div className="space-y-2">
                 {recentNotes.map(note => (
                   <NoteItem key={note.id} note={note} />
@@ -233,9 +233,9 @@ const NotesCard: React.FC = () => {
           
           {notes.length === 0 && (
             <div className="text-center py-6">
-              <StickyNote className="w-12 h-12 mx-auto text-gray-600 mb-3" />
-              <p className="text-gray-500 text-sm mb-4">No notes yet</p>
-              <p className="text-gray-600 text-xs">Create your first note to get started</p>
+              <StickyNote className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+              <p className="text-muted-foreground text-sm mb-4">No notes yet</p>
+              <p className="text-muted-foreground/70 text-xs">Create your first note to get started</p>
             </div>
           )}
         </CardContent>
@@ -243,34 +243,34 @@ const NotesCard: React.FC = () => {
 
       {/* Edit Note Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-[#2d2d2d] border-gray-600">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-white">Edit Note</DialogTitle>
+            <DialogTitle className="text-foreground">Edit Note</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Input
               placeholder="Note title"
               value={editNote.title}
               onChange={(e) => setEditNote(prev => ({ ...prev, title: e.target.value }))}
-              className="bg-[#3e3e42] border-gray-600 text-white placeholder:text-gray-400"
+              className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
             />
             <Textarea
               placeholder="Note content"
               value={editNote.content}
               onChange={(e) => setEditNote(prev => ({ ...prev, content: e.target.value }))}
-              className="bg-[#3e3e42] border-gray-600 text-white placeholder:text-gray-400 min-h-[120px]"
+              className="bg-secondary border-border text-foreground placeholder:text-muted-foreground min-h-[120px]"
             />
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => setIsEditDialogOpen(false)}
-                className="border-gray-600 text-gray-300 hover:bg-[#3e3e42]"
+                className="border-border text-muted-foreground hover:bg-secondary"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleEditNote}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Save className="w-4 h-4 mr-2" />
                 Save Changes

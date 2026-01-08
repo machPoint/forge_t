@@ -17,14 +17,12 @@ import UserProfile from './UserProfile';
 import AIActivityIndicator from './AIActivityIndicator';
 import opal from '@/lib/simple-opal-client';
 import { useEffect } from 'react';
-import { useTheme } from '@/lib/themes/simple-themes';
 import { useJournal } from '@/hooks/useJournal';
 
 const RibbonMenu = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [opalStatus, setOpalStatus] = useState('disconnected');
-  const { theme } = useTheme();
   const { isGeneratingFeedback } = useJournal();
 
   useEffect(() => {

@@ -130,8 +130,12 @@ class AuthService {
       // Save tokens in standard location
       localStorage.setItem('auth-tokens', JSON.stringify(tokens));
       
-      // Don't overwrite opal-token directly as it may be used for admin sessions
-      // Instead, emit an event that the OPAL client can listen for
+      // Also update opal-token for TokenManager compatibility
+      // This ensures useJournal and other hooks get the correct token
+      localStorage.setItem('opal-token', tokens.accessToken);
+      sessionStorage.setItem('opal-token', tokens.accessToken);
+      
+      // Emit event for OPAL client
       this.emit('tokenUpdate', tokens.accessToken);
     } catch (error) {
       console.warn('Failed to save tokens to storage:', error);

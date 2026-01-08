@@ -339,8 +339,8 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-100">Sentiment Analysis</h2>
-          <p className="text-sm text-gray-400">Emotional patterns in your memories</p>
+          <h2 className="text-2xl font-bold text-foreground">Sentiment Analysis</h2>
+          <p className="text-sm text-muted-foreground">Emotional patterns in your memories</p>
         </div>
         <Button
           variant="outline"
@@ -355,9 +355,9 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
       </div>
 
       {error && (
-        <Card className="bg-red-900/20 border-red-500/30">
+        <Card className="bg-destructive/20 border-destructive/30">
           <CardContent className="p-4">
-            <p className="text-red-400">{error}</p>
+            <p className="text-destructive">{error}</p>
           </CardContent>
         </Card>
       )}
@@ -365,28 +365,28 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
       {isAnalyzing ? (
         <div className="text-center py-12">
           <RefreshCw className="w-12 h-12 mx-auto mb-4 animate-spin text-blue-400" />
-          <h3 className="text-lg font-medium mb-2 text-gray-200">Analyzing Sentiment</h3>
-          <p className="text-sm text-gray-400">Processing {memories.length} memories...</p>
+          <h3 className="text-lg font-medium mb-2 text-foreground">Analyzing Sentiment</h3>
+          <p className="text-sm text-muted-foreground">Processing {memories.length} memories...</p>
         </div>
       ) : analyzedMemories.length > 0 ? (
         <>
           {/* Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-[#2a2a2a] border-gray-600">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <Heart className="w-8 h-8 text-[#003153]" />
                   <div>
-                    <div className="text-2xl font-bold text-gray-100">
+                    <div className="text-2xl font-bold text-foreground">
                       {isNaN(averageSentiment) ? '0.000' : averageSentiment.toFixed(3)}
                     </div>
-                    <div className="text-sm text-gray-400">Average Sentiment</div>
+                    <div className="text-sm text-muted-foreground">Average Sentiment</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#2a2a2a] border-gray-600">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   {averageSentiment > 0 ? (
@@ -395,11 +395,11 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
                     <TrendingDown className="w-8 h-8 text-[#003153]" />
                   )}
                   <div>
-                    <div className="text-2xl font-bold text-gray-100">
+                    <div className="text-2xl font-bold text-foreground">
                       {isNaN(averageSentiment) ? 'Neutral' : averageSentiment > 0 ? 'Positive' : averageSentiment < 0 ? 'Negative' : 'Neutral'}
                     </div>
-                    <div className="text-sm text-gray-400">Overall Trend</div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-sm text-muted-foreground">Overall Trend</div>
+                    <div className="text-xs text-muted-foreground/70 mt-1">
                       {getSentimentDescription(averageSentiment)}
                     </div>
                   </div>
@@ -407,15 +407,15 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
               </CardContent>
             </Card>
 
-            <Card className="bg-[#2a2a2a] border-gray-600">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <BarChart3 className="w-8 h-8 text-[#003153]" />
                   <div>
-                    <div className="text-2xl font-bold text-gray-100">
+                    <div className="text-2xl font-bold text-foreground">
                       {analyzedMemories.length}
                     </div>
-                    <div className="text-sm text-gray-400">Analyzed Core Entries</div>
+                    <div className="text-sm text-muted-foreground">Analyzed Core Entries</div>
                   </div>
                 </div>
               </CardContent>
@@ -424,37 +424,37 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
 
           {/* Sentiment Insights */}
           {sentimentInsights && (
-            <Card className="bg-[#2a2a2a] border-gray-600">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-gray-200">Sentiment Insights</CardTitle>
-                <CardDescription className="text-gray-400">Detailed analysis of your emotional patterns</CardDescription>
+                <CardTitle className="text-foreground">Sentiment Insights</CardTitle>
+                <CardDescription className="text-muted-foreground">Detailed analysis of your emotional patterns</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-[#333333] rounded-lg">
+                  <div className="text-center p-3 bg-secondary rounded-lg">
                     <div className="text-lg font-bold text-[#60a5fa]">{sentimentInsights.positiveCount}</div>
-                    <div className="text-xs text-gray-400">Positive</div>
+                    <div className="text-xs text-muted-foreground">Positive</div>
                   </div>
-                  <div className="text-center p-3 bg-[#333333] rounded-lg">
+                  <div className="text-center p-3 bg-secondary rounded-lg">
                     <div className="text-lg font-bold text-[#6b7280]">{sentimentInsights.negativeCount}</div>
-                    <div className="text-xs text-gray-400">Negative</div>
+                    <div className="text-xs text-muted-foreground">Negative</div>
                   </div>
-                  <div className="text-center p-3 bg-[#333333] rounded-lg">
+                  <div className="text-center p-3 bg-secondary rounded-lg">
                     <div className="text-lg font-bold text-[#9ca3af]">{sentimentInsights.neutralCount}</div>
-                    <div className="text-xs text-gray-400">Neutral</div>
+                    <div className="text-xs text-muted-foreground">Neutral</div>
                   </div>
-                  <div className="text-center p-3 bg-[#333333] rounded-lg">
+                  <div className="text-center p-3 bg-secondary rounded-lg">
                     <div className="text-lg font-bold text-[#3b82f6]">{sentimentInsights.emotionalRange.toFixed(3)}</div>
-                    <div className="text-xs text-gray-400">Emotional Range</div>
+                    <div className="text-xs text-muted-foreground">Emotional Range</div>
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-3 bg-[#333333] rounded-lg">
-                    <div className="text-sm text-gray-400 mb-1">Strongest Positive</div>
+                  <div className="p-3 bg-secondary rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Strongest Positive</div>
                     <div className="text-lg font-bold text-[#60a5fa]">{sentimentInsights.strongestPositive.toFixed(3)}</div>
                   </div>
-                  <div className="text-center p-3 bg-[#333333] rounded-lg">
-                    <div className="text-sm text-gray-400 mb-1">Strongest Negative</div>
+                  <div className="text-center p-3 bg-secondary rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Strongest Negative</div>
                     <div className="text-lg font-bold text-[#6b7280]">{sentimentInsights.strongestNegative.toFixed(3)}</div>
                   </div>
                 </div>
@@ -465,9 +465,9 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Sentiment Over Time */}
-            <Card className="bg-[#2a2a2a] border-gray-600">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-gray-200">Sentiment Over Time</CardTitle>
+                <CardTitle className="text-foreground">Sentiment Over Time</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -492,7 +492,7 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
                       />
                     </LineChart>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
                       No sentiment data available
                     </div>
                   )}
@@ -501,9 +501,9 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
             </Card>
 
             {/* Sentiment Distribution */}
-            <Card className="bg-[#2a2a2a] border-gray-600">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-gray-200">Sentiment Distribution</CardTitle>
+                <CardTitle className="text-foreground">Sentiment Distribution</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -524,7 +524,7 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
                       <Tooltip />
                     </PieChart>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
                       No sentiment distribution data
                     </div>
                   )}
@@ -534,9 +534,9 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
           </div>
 
           {/* Recent Memories with Sentiment */}
-          <Card className="bg-[#2a2a2a] border-gray-600">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-gray-200">Recent Memories by Sentiment</CardTitle>
+              <CardTitle className="text-foreground">Recent Memories by Sentiment</CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-64">
@@ -545,7 +545,7 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                     .slice(0, 10)
                     .map((memory) => (
-                      <div key={memory.id} className="flex items-start gap-3 p-3 bg-[#333333] rounded-lg">
+                      <div key={memory.id} className="flex items-start gap-3 p-3 bg-secondary rounded-lg">
                         <div className="flex items-center gap-2">
                           {getSentimentIcon(memory.sentiment.label, memory.sentiment.compound)}
                           <Badge 
@@ -562,11 +562,11 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
                           </Badge>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-200 truncate">{memory.title}</h4>
-                          <p className="text-sm text-gray-400 line-clamp-2">{memory.summary}</p>
+                          <h4 className="font-medium text-foreground truncate">{memory.title}</h4>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{memory.summary}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <Calendar className="w-3 h-3 text-gray-500" />
-                            <span className="text-xs text-gray-500">
+                            <Calendar className="w-3 h-3 text-muted-foreground/70" />
+                            <span className="text-xs text-muted-foreground/70">
                               {format(new Date(memory.createdAt), 'MMM dd, yyyy')}
                             </span>
                           </div>
@@ -580,9 +580,9 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ memories }) => {
         </>
       ) : (
         <div className="text-center py-12">
-          <Heart className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-          <h3 className="text-lg font-medium mb-2 text-gray-200">No Sentiment Data</h3>
-          <p className="text-sm text-gray-400">Add some memories to see sentiment analysis</p>
+          <Heart className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-medium mb-2 text-foreground">No Sentiment Data</h3>
+          <p className="text-sm text-muted-foreground">Add some memories to see sentiment analysis</p>
         </div>
       )}
     </div>

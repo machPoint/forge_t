@@ -3,10 +3,10 @@ import { cn } from '@/lib/utils';
 import { layout } from '@/lib/design-tokens';
 
 /**
- * SidebarLayoutTemplate - Standardized sidebar layout
+ * SidebarLayoutTemplate - Modern Floating Layout
  * 
- * Provides a consistent sidebar + main content layout pattern
- * used across pages like Memories, Core, Modules, etc.
+ * Implements a "Unix" / Mobile-style aesthetic with floating panels,
+ * rounded corners, and high-contrast dark theme support.
  */
 
 interface SidebarLayoutTemplateProps {
@@ -33,7 +33,7 @@ const SidebarLayoutTemplate: React.FC<SidebarLayoutTemplateProps> = ({
   sidebarPosition = 'left',
   collapsible = false,
   defaultCollapsed = false,
-  showDivider = true,
+  showDivider = true, // Ignored in floating layout
   padding = 'default',
 }) => {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
@@ -45,10 +45,10 @@ const SidebarLayoutTemplate: React.FC<SidebarLayoutTemplateProps> = ({
     wide: 'w-96',       // 384px
   }[sidebarWidth];
 
-  // Determine padding class
+  // Determine padding class for content
   const paddingClass = {
     none: 'p-0',
-    small: 'p-3',
+    small: 'p-4',
     default: 'p-6',
     large: 'p-8',
   }[padding];
@@ -58,64 +58,49 @@ const SidebarLayoutTemplate: React.FC<SidebarLayoutTemplateProps> = ({
   const layoutClass = isRightSidebar ? 'flex-row-reverse' : 'flex-row';
 
   return (
-    <div className={cn('flex h-full', layoutClass, className)}>
-      {/* Sidebar */}
+    <div className={cn('flex h-screen w-full bg-background p-4 gap-4 overflow-hidden', layoutClass, className)}>
+      {/* Sidebar - Floating Dock Style */}
       <div
         className={cn(
-          'flex-shrink-0 transition-all duration-300',
-          isCollapsed ? 'w-0 overflow-hidden' : sidebarWidthClass,
-          showDivider && !isCollapsed && (
-            isRightSidebar 
-              ? 'border-l' 
-              : 'border-r'
-          )
+          'flex-shrink-0 transition-all duration-300 relative',
+          'bg-sidebar/50 backdrop-blur-xl border border-sidebar-border rounded-[2rem] overflow-hidden shadow-2xl',
+          isCollapsed ? 'w-20' : sidebarWidthClass
         )}
-        style={{
-          borderColor: showDivider ? 'var(--app-border-divider)' : 'transparent',
-          backgroundColor: 'var(--app-bg-secondary)',
-        }}
       >
-        {!isCollapsed && (
-          <div className={cn('h-full overflow-auto', paddingClass)}>
-            {sidebar}
+        <div className="h-full flex flex-col">
+          <div className={cn('flex-1 overflow-auto scrollbar-hide', !isCollapsed && 'p-2')}>
+             {/* Hide sidebar content if collapsed to prevent squishing */}
+            <div className={cn('h-full transition-opacity duration-200', isCollapsed ? 'opacity-0 invisible w-0' : 'opacity-100')}>
+              {sidebar}
+            </div>
           </div>
-        )}
+          
+          {/* Collapse Toggle Button (Bottom of Sidebar) */}
+          {collapsible && (
+             <div className="p-4 flex justify-center border-t border-sidebar-border/50">
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="p-2 rounded-full hover:bg-sidebar-accent text-sidebar-foreground transition-colors"
+                >
+                  <svg 
+                    className={cn('w-5 h-5 transition-transform duration-300', {
+                      'rotate-180': !isCollapsed,
+                    })}
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                  </svg>
+                </button>
+             </div>
+          )}
+        </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {collapsible && (
-          <div 
-            className={cn(
-              'flex-shrink-0 p-2',
-              isRightSidebar ? 'justify-end' : 'justify-start'
-            )}
-            style={{ backgroundColor: 'var(--app-bg-primary)' }}
-          >
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className={cn(
-                'p-2 rounded-md transition-colors duration-200',
-                'hover:bg-[var(--app-bg-hover)]'
-              )}
-              style={{ color: 'var(--app-text-secondary)' }}
-              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              <svg 
-                className={cn('w-4 h-4 transition-transform duration-200', {
-                  'rotate-180': isRightSidebar && !isCollapsed || !isRightSidebar && isCollapsed,
-                })}
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
-        )}
-        
-        <div className="flex-1 overflow-auto">
+      {/* Main Content - Floating Card Style */}
+      <div className="flex-1 flex flex-col overflow-hidden rounded-[2rem] bg-card border border-border shadow-2xl relative">
+        <div className={cn('flex-1 overflow-auto scrollbar-thin', paddingClass)}>
           {children}
         </div>
       </div>

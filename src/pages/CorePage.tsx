@@ -237,13 +237,13 @@ const CorePage: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-app-bg-primary to-app-bg-secondary flex flex-col overflow-hidden">
+    <div className="h-full bg-background flex flex-col overflow-hidden">
 
       {/* Main Content Area */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Sidebar */}
         {!sidebarCollapsed && (
-          <div className="bg-app-sidebar border-r border-app-border-divider min-w-[220px] max-w-[320px] w-[25%] flex-shrink-0 transition-all duration-200">
+          <div className="bg-background border-r border-border min-w-[220px] max-w-[320px] w-[25%] flex-shrink-0 transition-all duration-200">
             <CoreSidebar 
               memories={memories}
               selectedMemoryId={selectedMemoryId}
@@ -258,23 +258,23 @@ const CorePage: React.FC = () => {
         )}
 
         {/* Main Content with Tabs */}
-        <div className="flex-1 flex flex-col min-h-0 bg-gradient-to-br from-app-bg-secondary to-app-bg-elevated">
+        <div className="flex-1 flex flex-col min-h-0 bg-background">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <div className="border-b border-app-border-divider px-6 py-3 flex items-center justify-between">
-              <TabsList className="bg-app-bg-elevated border border-app-border-primary">
-                <TabsTrigger value="viewer" className="flex items-center gap-2">
+            <div className="border-b border-border px-6 py-3 flex items-center justify-between bg-background">
+              <TabsList className="bg-muted/50 border border-border">
+                <TabsTrigger value="viewer" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <Eye className="w-4 h-4" />
                   Viewer
                 </TabsTrigger>
-                <TabsTrigger value="insights" className="flex items-center gap-2">
+                <TabsTrigger value="insights" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <BarChart3 className="w-4 h-4" />
                   Insights
                 </TabsTrigger>
-                <TabsTrigger value="visualizations" className="flex items-center gap-2">
+                <TabsTrigger value="visualizations" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <ChartBar className="w-4 h-4" />
                   Analytics
                 </TabsTrigger>
-                <TabsTrigger value="chat" className="flex items-center gap-2">
+                <TabsTrigger value="chat" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <MessageCircle className="w-4 h-4" />
                   Chat
                 </TabsTrigger>
@@ -284,7 +284,7 @@ const CorePage: React.FC = () => {
                 <Button
                   onClick={() => setShowAddMemory(true)}
                   size="sm"
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Core Entry
@@ -294,7 +294,7 @@ const CorePage: React.FC = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="text-app-text-secondary hover:text-app-text-primary"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   {sidebarCollapsed ? <PanelLeft /> : <PanelLeftClose />}
                 </Button>

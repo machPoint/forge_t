@@ -30,11 +30,14 @@ router.get('/', authenticateJWT, async (req, res) => {
  */
 router.post('/', authenticateJWT, async (req, res) => {
   try {
+    logger.info(`[Journal Route] Creating entry for user: ${req.user.id}`);
+    logger.info(`[Journal Route] Request body: ${JSON.stringify(req.body)}`);
     const newEntry = await journalService.createJournalEntry(req.user.id, req.body);
     res.status(201).json(newEntry);
   } catch (error) {
-    logger.error('Error creating journal entry:', error);
-    res.status(500).json({ error: 'Failed to create journal entry.' });
+    logger.error(`[Journal Route] Error creating journal entry: ${error.message}`);
+    logger.error(`[Journal Route] Stack: ${error.stack}`);
+    res.status(500).json({ error: 'Failed to create journal entry.', details: error.message });
   }
 });
 

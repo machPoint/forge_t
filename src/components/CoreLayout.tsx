@@ -76,15 +76,15 @@ const CoreLayout: React.FC = () => {
     return 'destructive';
   };
 
-  // Custom divider style for subtle, dark lines
-  const dividerClass = "w-px bg-[#23232a] dark:bg-[#23232a] opacity-70 h-full";
+  // Custom divider style using theme variables
+  const dividerClass = "w-px bg-border opacity-70 h-full";
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-[#111111] to-[#222222] dark:from-[#111111] dark:to-[#222222]">
-      <div className="h-14 border-b border-gray-700 px-4 flex items-center justify-between bg-[#1d1d1d]/80 dark:bg-[#1d1d1d]/80 backdrop-blur-sm">
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
+      <div className="h-14 border-b border-border px-4 flex items-center justify-between bg-card/80 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Core Manager</h1>
-          <div className="h-6 w-px bg-gray-700"></div>
+          <h1 className="text-xl font-semibold text-foreground">Core Manager</h1>
+          <div className="h-6 w-px bg-border"></div>
           <MainNavigation />
         </div>
         
@@ -105,10 +105,10 @@ const CoreLayout: React.FC = () => {
         </div>
       </div>
       
-      <div className="flex-1 overflow-hidden flex bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] dark:from-[#1a1a1a] dark:to-[#2a2a2a]">
+      <div className="flex-1 overflow-hidden flex bg-background">
         {/* Sidebar */}
         {!leftPaneCollapsed && (
-          <div className="bg-[#1d1d1d] dark:bg-[#1d1d1d] border-r border-[#23232a] min-w-[220px] max-w-[320px] w-[20%] flex-shrink-0 transition-all duration-200">
+          <div className="bg-card border-r border-border min-w-[220px] max-w-[320px] w-[20%] flex-shrink-0 transition-all duration-200">
             <CoreSidebar />
           </div>
         )}
@@ -116,7 +116,7 @@ const CoreLayout: React.FC = () => {
         {!leftPaneCollapsed && <div className={dividerClass} />}
         {/* Main Viewer */}
         <div className="flex-1 min-w-0 flex flex-col">
-          <div className="h-full bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] dark:from-[#1a1a1a] dark:to-[#2a2a2a]">
+          <div className="h-full bg-background">
             <CoreViewer
               selectedMemoryId={selectedCoreId}
               memories={coreEntries}
@@ -127,7 +127,7 @@ const CoreLayout: React.FC = () => {
         {!rightPaneCollapsed && <div className={dividerClass} />}
         {/* Insights Pane */}
         {!rightPaneCollapsed && (
-          <div className="bg-[#1d1d1d] dark:bg-[#1d1d1d] border-l border-[#23232a] min-w-[220px] max-w-[320px] w-[20%] flex-shrink-0 transition-all duration-200">
+          <div className="bg-card border-l border-border min-w-[220px] max-w-[320px] w-[20%] flex-shrink-0 transition-all duration-200">
             <CoreInsights coreEntries={coreEntries} />
           </div>
         )}
@@ -137,7 +137,7 @@ const CoreLayout: React.FC = () => {
       <Button 
         variant="outline" 
         size="icon" 
-        className="absolute top-20 left-2 z-10 h-8 w-8 bg-[#1d1d1d] dark:bg-[#1d1d1d] opacity-80 hover:opacity-100"
+        className="absolute top-20 left-2 z-10 h-8 w-8 bg-card opacity-80 hover:opacity-100"
         onClick={() => setLeftPaneCollapsed(!leftPaneCollapsed)}
       >
         {leftPaneCollapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
@@ -146,7 +146,7 @@ const CoreLayout: React.FC = () => {
       <Button 
         variant="outline" 
         size="icon" 
-        className="absolute top-20 right-2 z-10 h-8 w-8 bg-[#1d1d1d] dark:bg-[#1d1d1d] opacity-80 hover:opacity-100"
+        className="absolute top-20 right-2 z-10 h-8 w-8 bg-card opacity-80 hover:opacity-100"
         onClick={() => setRightPaneCollapsed(!rightPaneCollapsed)}
       >
         {rightPaneCollapsed ? <PanelRight size={16} /> : <PanelRightClose size={16} />}

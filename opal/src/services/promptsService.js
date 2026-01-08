@@ -522,25 +522,14 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
     modelTrimmed: model ? model.trim() : 'null'
   });
 
-  // Validate and fix model ID if needed
-  const validModels = ['gpt-4o-2024-08-06', 'gpt-4o-mini-2024-07-18'];
+  // Use the model as-is (dynamically fetched from OpenAI API)
+  // Only provide a fallback if no model is specified
   let validatedModel = model;
-  
-  if (!validModels.includes(model)) {
-    console.log('[PromptsService] WARNING - Invalid model detected:', model);
-    console.log('[PromptsService] Available models:', validModels);
-    
-    // Try to map old model names to new ones
-    if (model === 'gpt-4o' || !model) {
-      validatedModel = 'gpt-4o-2024-08-06';
-      console.log('[PromptsService] Mapped to:', validatedModel);
-    } else if (model === 'gpt-4o-mini') {
-      validatedModel = 'gpt-4o-mini-2024-07-18';
-      console.log('[PromptsService] Mapped to:', validatedModel);
-    } else {
-      validatedModel = 'gpt-4o-2024-08-06'; // Default fallback
-      console.log('[PromptsService] Using default fallback:', validatedModel);
-    }
+  if (!model || model.trim() === '') {
+    validatedModel = 'gpt-4o'; // Default fallback
+    console.log('[PromptsService] No model specified, using default:', validatedModel);
+  } else {
+    console.log('[PromptsService] Using requested model:', validatedModel);
   }
 
   // ENHANCED: Add profile context validation before sending to OpenAI
@@ -553,6 +542,30 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
     logger.warn('[PromptsService] AI Feedback will not be personalized without profile context');
   }
 
+  // Determine which token parameter to use based on model
+  // GPT-5 models: omit token limit (let OpenAI use default)
+  // GPT-4o, GPT-4-turbo use max_completion_tokens
+  // Older models (gpt-3.5, gpt-4 without suffix) use max_tokens
+  const isGpt5Model = validatedModel.startsWith('gpt-5');
+  const isOlderModel = validatedModel.startsWith('gpt-3') || 
+                       validatedModel === 'gpt-4' ||
+                       validatedModel.startsWith('gpt-4-0') ||
+                       validatedModel.startsWith('gpt-4-1');
+  
+  // Select the appropriate token limit parameter
+  // GPT-5 models don't need a token limit specified
+  let tokenParam = {};
+  if (isGpt5Model) {
+    // GPT-5 models - don't specify token limit
+    tokenParam = {};
+  } else if (isOlderModel) {
+    tokenParam = { max_tokens: 1800 };
+  } else {
+    tokenParam = { max_completion_tokens: 1800 };
+  }
+  
+  console.log('[PromptsService] Token parameter for feedback model', validatedModel, ':', tokenParam);
+  
   const body = {
     model: validatedModel,
     messages: [
@@ -562,7 +575,7 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
       { role: 'user', content: entryContent }
     ],
     temperature: 0.8,
-    max_tokens: 1800
+    ...tokenParam
   };
   
   // Log the messages being sent (but mask any personal data)
@@ -580,6 +593,10 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
 
   try {
     const fetch = (await import('node-fetch')).default;
+    
+    console.log('[PromptsService] Making OpenAI API request with model:', validatedModel);
+    console.log('[PromptsService] API key preview:', apiKey.substring(0, 10) + '...');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -591,19 +608,27 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('[PromptsService] OpenAI API error response:', response.status, errorText);
       logger.error(`OpenAI API error: ${response.status} ${errorText}`);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('[PromptsService] OpenAI API response received, choices:', data.choices?.length);
+    
     const feedback = data.choices?.[0]?.message?.content?.trim();
     if (!feedback) {
+      console.error('[PromptsService] No feedback in response:', JSON.stringify(data));
       throw new Error('No feedback returned from OpenAI.');
     }
+    
+    console.log('[PromptsService] Successfully got feedback, length:', feedback.length);
     return feedback;
   } catch (error) {
+    console.error('[PromptsService] Error calling OpenAI for feedback:', error.message);
+    console.error('[PromptsService] Full error:', error);
     logger.error('Error calling OpenAI for feedback:', error);
-    throw new Error('Failed to get feedback from AI service.');
+    throw new Error(`Failed to get feedback from AI service: ${error.message}`);
   }
 }
 
@@ -774,27 +799,40 @@ async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUse
     modelTrimmed: model ? model.trim() : 'null'
   });
 
-  // Validate and fix model ID if needed (same validation as AI Feedback)
-  const validModels = ['gpt-4o-2024-08-06', 'gpt-4o-mini-2024-07-18'];
+  // Use the model as-is (dynamically fetched from OpenAI API)
+  // Only provide a fallback if no model is specified
   let validatedModel = model;
-  
-  if (!validModels.includes(model)) {
-    console.log('[PromptsService] WARNING - Invalid model detected for AI Insights:', model);
-    console.log('[PromptsService] Available models:', validModels);
-    
-    // Try to map old model names to new ones
-    if (model === 'gpt-4o' || !model) {
-      validatedModel = 'gpt-4o-2024-08-06';
-      console.log('[PromptsService] Mapped AI Insights model to:', validatedModel);
-    } else if (model === 'gpt-4o-mini') {
-      validatedModel = 'gpt-4o-mini-2024-07-18';
-      console.log('[PromptsService] Mapped AI Insights model to:', validatedModel);
-    } else {
-      validatedModel = 'gpt-4o-mini-2024-07-18'; // Default fallback to mini for prompts
-      console.log('[PromptsService] Using default fallback for AI Insights:', validatedModel);
-    }
+  if (!model || model.trim() === '') {
+    validatedModel = 'gpt-4o'; // Default fallback
+    console.log('[PromptsService] No model specified for AI Insights, using default:', validatedModel);
+  } else {
+    console.log('[PromptsService] Using requested model for AI Insights:', validatedModel);
   }
 
+  // Determine which token parameter to use based on model
+  // GPT-5 models: omit token limit (let OpenAI use default)
+  // GPT-4o, GPT-4-turbo use max_completion_tokens
+  // Older models (gpt-3.5, gpt-4 without suffix) use max_tokens
+  const isGpt5Model = validatedModel.startsWith('gpt-5');
+  const isOlderModel = validatedModel.startsWith('gpt-3') || 
+                       validatedModel === 'gpt-4' ||
+                       validatedModel.startsWith('gpt-4-0') ||
+                       validatedModel.startsWith('gpt-4-1');
+  
+  // Select the appropriate token limit parameter
+  // GPT-5 models don't need a token limit specified
+  let tokenParam = {};
+  if (isGpt5Model) {
+    // GPT-5 models - don't specify token limit
+    tokenParam = {};
+  } else if (isOlderModel) {
+    tokenParam = { max_tokens: 800 };
+  } else {
+    tokenParam = { max_completion_tokens: 800 };
+  }
+  
+  console.log('[PromptsService] Token parameter for model', validatedModel, ':', tokenParam);
+  
   const body = {
     model: validatedModel,
     messages: [
@@ -804,14 +842,25 @@ async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUse
       { role: 'user', content: memoriesContext }
     ],
     temperature: 0.6,
-    max_tokens: 800 // Insights need more tokens than feedback
+    ...tokenParam
   };
   
   // Log the request (but mask any personal data)
   logger.debug(`[PromptsService] Sending ${body.messages.length} messages to OpenAI for insights`);
+  console.log('[PromptsService] AI Insights request body:', {
+    model: body.model,
+    messageCount: body.messages.length,
+    temperature: body.temperature,
+    hasMaxCompletionTokens: !!body.max_completion_tokens,
+    hasMaxTokens: !!body.max_tokens
+  });
 
   try {
     const fetch = (await import('node-fetch')).default;
+    
+    console.log('[PromptsService] Making OpenAI API request for insights with model:', validatedModel);
+    console.log('[PromptsService] API key preview for insights:', apiKey.substring(0, 10) + '...');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -821,20 +870,46 @@ async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUse
       body: JSON.stringify(body)
     });
 
+    console.log('[PromptsService] OpenAI insights response status:', response.status);
+    
+    // Get the raw response text first to debug
+    const responseText = await response.text();
+    console.log('[PromptsService] 🔥 Raw response text (first 1000 chars):', responseText.substring(0, 1000));
+
     if (!response.ok) {
-      const errorText = await response.text();
-      logger.error(`OpenAI API error for insights: ${response.status} ${errorText}`);
-      throw new Error(`OpenAI API error for insights: ${response.status}`);
+      console.error('[PromptsService] OpenAI API error for insights:', response.status, responseText);
+      logger.error(`OpenAI API error for insights: ${response.status} ${responseText}`);
+      throw new Error(`OpenAI API error for insights: ${response.status} - ${responseText}`);
     }
 
-    const data = await response.json();
-    const insightsText = data.choices?.[0]?.message?.content?.trim();
+    const data = JSON.parse(responseText);
     
-    console.log('[PromptsService] 🔥 Raw OpenAI response:', JSON.stringify(data, null, 2));
-    console.log('[PromptsService] 🔥 Extracted insights text:', insightsText);
+    console.log('[PromptsService] 🔥 Raw OpenAI response keys:', Object.keys(data));
+    console.log('[PromptsService] 🔥 Raw OpenAI response:', JSON.stringify(data, null, 2).substring(0, 2000));
+    
+    // Handle different response formats from various OpenAI models
+    let insightsText = null;
+    
+    // Standard format: data.choices[0].message.content
+    if (data.choices?.[0]?.message?.content) {
+      insightsText = data.choices[0].message.content.trim();
+      console.log('[PromptsService] 🔥 Found content in standard format');
+    }
+    // Some newer models might use output_text or other fields
+    else if (data.output_text) {
+      insightsText = data.output_text.trim();
+      console.log('[PromptsService] 🔥 Found content in output_text format');
+    }
+    // Check for output array format
+    else if (data.output?.[0]?.content?.[0]?.text) {
+      insightsText = data.output[0].content[0].text.trim();
+      console.log('[PromptsService] 🔥 Found content in output array format');
+    }
+    
+    console.log('[PromptsService] 🔥 Extracted insights text:', insightsText ? insightsText.substring(0, 500) : 'null');
     
     if (!insightsText) {
-      console.log('[PromptsService] 🔥 No insights text found in response');
+      console.log('[PromptsService] 🔥 No insights text found in response. Full response:', JSON.stringify(data));
       throw new Error('No insights returned from OpenAI.');
     }
     

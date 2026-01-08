@@ -1,53 +1,53 @@
-/* Custom styles for Quill editor to make toolbar brighter and more readable */
+/* Custom styles for Quill editor - uses dynamic theme variables */
 
 .quill-brighter-toolbar .ql-toolbar {
-  background-color: var(--app-bg-secondary) !important;
-  border-color: var(--app-border-primary) !important;
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar .ql-stroke {
-  stroke: var(--app-text-secondary) !important;
+  stroke: hsl(var(--muted-foreground)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar .ql-fill {
-  fill: var(--app-text-secondary) !important;
+  fill: hsl(var(--muted-foreground)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar .ql-picker {
-  color: var(--app-text-secondary) !important;
+  color: hsl(var(--muted-foreground)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar .ql-picker-label {
-  color: var(--app-text-secondary) !important;
+  color: hsl(var(--muted-foreground)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar .ql-picker-options {
-  background-color: var(--app-bg-tertiary) !important;
-  border-color: var(--app-border-primary) !important;
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar .ql-picker-item {
-  color: var(--app-text-secondary) !important;
+  color: hsl(var(--muted-foreground)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar button:hover .ql-stroke,
 .quill-brighter-toolbar .ql-toolbar button.ql-active .ql-stroke {
-  stroke: var(--app-text-primary) !important;
+  stroke: hsl(var(--foreground)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar button:hover .ql-fill,
 .quill-brighter-toolbar .ql-toolbar button.ql-active .ql-fill {
-  fill: var(--app-text-primary) !important;
+  fill: hsl(var(--foreground)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar .ql-picker-label:hover,
 .quill-brighter-toolbar .ql-toolbar .ql-picker-label.ql-active {
-  color: var(--app-text-primary) !important;
+  color: hsl(var(--foreground)) !important;
 }
 
 .quill-brighter-toolbar .ql-toolbar .ql-picker-item:hover,
 .quill-brighter-toolbar .ql-toolbar .ql-picker-item.ql-selected {
-  color: var(--app-text-primary) !important;
+  color: hsl(var(--foreground)) !important;
 }
 
 /* Make toolbar buttons more visible */
@@ -57,17 +57,17 @@
 
 /* Improve dropdown visibility */
 .quill-brighter-toolbar .ql-toolbar .ql-picker-label::before {
-  color: var(--app-text-secondary) !important;
+  color: hsl(var(--muted-foreground)) !important;
 }
 
 /* Improve editor container border */
 .quill-brighter-toolbar .ql-container {
-  border-color: var(--app-border-primary) !important;
-  background-color: var(--app-bg-primary) !important;
+  border-color: hsl(var(--border)) !important;
+  background-color: hsl(var(--background)) !important;
 }
 
 /* Ensure the editor content area uses theme background */
 .quill-brighter-toolbar .ql-editor {
-  background-color: var(--app-bg-primary) !important;
-  color: var(--app-text-primary) !important;
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
 }

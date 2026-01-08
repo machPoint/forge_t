@@ -303,12 +303,7 @@ const GuidedEditor: React.FC<GuidedEditorProps> = ({
                 updateModuleProgress(activeModuleId, { currentStep: 0 });
               }
             }}
-            className="flex items-center gap-2"
-            style={{
-              backgroundColor: 'var(--forge-button-primary)',
-              borderColor: 'var(--forge-button-primary)',
-              color: 'white'
-            }}
+            className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <span>Begin Step 1</span>
             <ArrowRight size={16} />
@@ -355,14 +350,10 @@ const GuidedEditor: React.FC<GuidedEditorProps> = ({
           )}
         </div>
         
-        <div className="p-4 border mt-3 forge-card" style={{
-          backgroundColor: 'var(--forge-card-bg)',
-          borderColor: 'var(--forge-border-primary)',
-          borderRadius: 0
-        }}>
-          <h3 className="font-medium mb-1" style={{color: 'var(--forge-text-primary)'}}>{currentStep.title}</h3>
-          <p className="text-sm mb-2" style={{color: 'var(--forge-text-secondary)'}}>{currentStep.description}</p>
-          <p className="italic" style={{color: 'var(--forge-text-primary)'}}>{currentStep.prompt}</p>
+        <div className="p-4 border mt-3 bg-card border-border rounded-none">
+          <h3 className="font-medium mb-1 text-foreground">{currentStep.title}</h3>
+          <p className="text-sm mb-2 text-muted-foreground">{currentStep.description}</p>
+          <p className="italic text-foreground">{currentStep.prompt}</p>
         </div>
       </CardHeader>
       
@@ -406,12 +397,7 @@ const GuidedEditor: React.FC<GuidedEditorProps> = ({
           {!isCurrentStepCompleted && (
             <Button 
               onClick={handleCompleteStep}
-              className="flex items-center gap-2"
-              style={{
-                backgroundColor: 'var(--forge-success)',
-                borderColor: 'var(--forge-success)',
-                color: 'white'
-              }}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
             >
               <Check size={16} />
               <span>Complete Step</span>

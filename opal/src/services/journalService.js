@@ -39,9 +39,14 @@ async function createJournalEntry(userId, entryData) {
 
     logger.debug(`[JournalService] Sanitized entry data: ${JSON.stringify(minimalData)}`);
     
-    const [newEntry] = await db('journal_entries')
-      .insert(minimalData)
-      .returning('*');
+    // Insert and get the ID (SQLite doesn't support returning('*') well)
+    const [insertedId] = await db('journal_entries')
+      .insert(minimalData);
+    
+    // Fetch the newly created entry
+    const newEntry = await db('journal_entries')
+      .where({ id: insertedId })
+      .first();
     
     // Convert snake_case keys from database back to camelCase for frontend
     return toCamelCase(newEntry);
@@ -95,15 +100,20 @@ async function updateJournalEntry(entryId, userId, updates) {
     
     logger.debug(`[JournalService] Safe update data (snake_case): ${JSON.stringify(snakeCaseUpdates)}`);
     
-    const [updatedEntry] = await db('journal_entries')
+    // Update the entry (SQLite doesn't support returning('*') well)
+    const updateCount = await db('journal_entries')
       .where({ id: entryId, user_id: userId })
-      .update(snakeCaseUpdates)
-      .returning('*');
+      .update(snakeCaseUpdates);
     
-    if (!updatedEntry) {
+    if (updateCount === 0) {
       logger.error(`[JournalService] No entry found or updated with id ${entryId} for user ${userId}`);
       throw new Error(`Journal entry not found or you don't have permission to update it`);
     }
+    
+    // Fetch the updated entry
+    const updatedEntry = await db('journal_entries')
+      .where({ id: entryId })
+      .first();
     
     // Convert snake_case keys from database back to camelCase for frontend
     const camelCaseEntry = toCamelCase(updatedEntry);

@@ -26,6 +26,7 @@ export default function OpalSettings({ isOpen, onClose }) {
   const [openaiTesting, setOpenaiTesting] = useState(false);
   const [openaiError, setOpenaiError] = useState(null);
   const [openaiModels, setOpenaiModels] = useState([]);
+  const [loadingModels, setLoadingModels] = useState(false);
   
   // OpenAI API key management state
   const [openaiApiKey, setOpenaiApiKey] = useState('');
@@ -158,6 +159,41 @@ export default function OpalSettings({ isOpen, onClose }) {
     }
   };
 
+  // Fetch available OpenAI models
+  const fetchOpenAIModels = async () => {
+    setLoadingModels(true);
+    try {
+      const result = await opal.callTool('list_openai_models', { filter: 'gpt' });
+      console.log('OpenAI models result:', result);
+      
+      // Parse the response
+      let models = [];
+      if (result && result.success && Array.isArray(result.models)) {
+        models = result.models;
+      } else if (result && result.content && Array.isArray(result.content)) {
+        // Handle MCP wrapped response
+        try {
+          const textContent = result.content[0]?.text;
+          if (textContent) {
+            const parsed = JSON.parse(textContent);
+            if (parsed.success && Array.isArray(parsed.models)) {
+              models = parsed.models;
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse models response:', e);
+        }
+      }
+      
+      setOpenaiModels(models);
+      console.log('Available OpenAI models:', models.map(m => m.id));
+    } catch (error) {
+      console.error('Error fetching OpenAI models:', error);
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+
   // Test OpenAI API connection
   const testOpenAIConnection = async () => {
     setOpenaiTesting(true);
@@ -212,16 +248,8 @@ export default function OpalSettings({ isOpen, onClose }) {
       
       if (finalResult && (finalResult.success === true || finalResult.isError === false)) {
         setOpenaiStatus('connected');
-        
-        // Support both modelCount (number) and models (array)
-        if (finalResult.modelCount) {
-          // Create a dummy array with length of modelCount 
-          setOpenaiModels(Array(finalResult.modelCount).fill({}));
-        } else if (finalResult.models) {
-          setOpenaiModels(finalResult.models);
-        } else {
-          setOpenaiModels([]);
-        }
+        // Fetch the actual models list after successful connection test
+        await fetchOpenAIModels();
       } else {
         setOpenaiStatus('error');
         setOpenaiError(
@@ -400,37 +428,53 @@ export default function OpalSettings({ isOpen, onClose }) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-medium">AI Model:</span>
-                <Select value={selectedModel} onValueChange={handleModelChange}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gpt-4o-2024-08-06">
-                      <div className="flex flex-col">
-                        <span className="font-medium">GPT-4o</span>
-                        <span className="text-xs text-gray-400">Latest, most capable model</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="gpt-4o-mini-2024-07-18">
-                      <div className="flex flex-col">
-                        <span className="font-medium">GPT-4o-mini</span>
-                        <span className="text-xs text-gray-400">Faster, cost-effective version</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <Select value={selectedModel} onValueChange={handleModelChange}>
+                    <SelectTrigger className="w-56">
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64 overflow-y-auto">
+                      {loadingModels ? (
+                        <div className="flex items-center justify-center p-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="ml-2 text-sm">Loading models...</span>
+                        </div>
+                      ) : openaiModels.length > 0 ? (
+                        openaiModels.map((model) => (
+                          <SelectItem key={model.id} value={model.id}>
+                            <span className="font-mono text-sm">{model.id}</span>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <>
+                          <SelectItem value="gpt-4o-2024-08-06">gpt-4o-2024-08-06</SelectItem>
+                          <SelectItem value="gpt-4o-mini-2024-07-18">gpt-4o-mini-2024-07-18</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={fetchOpenAIModels}
+                    disabled={loadingModels}
+                    title="Refresh models list"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${loadingModels ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
               </div>
               
               {/* Available Models Count */}
               {openaiModels.length > 0 && (
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <span>Available Models:</span>
-                  <Badge variant="outline">{openaiModels.length} models detected</Badge>
+                  <Badge variant="outline">{openaiModels.length} GPT models available</Badge>
                 </div>
               )}
               
               <div className="text-xs text-gray-500">
-                Changes take effect immediately for new AI interactions
+                Models are fetched dynamically from OpenAI API. Changes take effect immediately.
               </div>
             </div>
           )}

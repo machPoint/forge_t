@@ -26,7 +26,7 @@ import { getAIFeedback } from '@/lib/openai';
 import { getPersonaById } from '@/lib/aiPersonas';
 import { getIdentityProfile } from '@/lib/identityProfileService';
 import ConfigValidator from "./config/ConfigValidator";
-import { themeManager, useTheme } from "@/lib/themes/simple-themes";
+import UserProfile from "./components/UserProfile";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +35,6 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { addEntry, selectedEntry, updateEntry } = useJournal();
   const [showFeedback, setShowFeedback] = useState(false);
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
-  const { theme } = useTheme();
 
   // Define handleFeedbackRequest first
   const handleFeedbackRequest = useCallback(async () => {
@@ -95,15 +94,10 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
     }
   }, [selectedEntry, updateEntry]);
 
-  // Initialize configuration validation and theme on startup
+  // Initialize configuration validation on startup
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Initialize theme system first
-        console.log('[App] Initializing theme system...');
-        themeManager.initialize();
-        console.log('[App] Theme system initialized');
-        
         console.log('[App] Starting configuration validation...');
         // Temporarily disable validation to debug startup issues
         // await ConfigValidator.validateOnStartup();
@@ -141,16 +135,18 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
   }, [handleFeedbackRequest]);
 
   return (
-    <div className="h-screen flex flex-col" style={{ backgroundColor: theme.styles.primaryBg, color: theme.styles.primaryText }}>
-      {/* Global Windows-style Ribbon */}
+    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
+      {/* Top Navigation */}
       <MenuHandler />
       
-      {/* Main Content Area with Theme Background */}
-      <div className="flex-1 min-h-0" style={{ backgroundColor: theme.styles.primaryBg }}>
-        {children}
+      {/* Main Content Area */}
+      <div className="flex-1 min-h-0 overflow-hidden relative">
+        <div className="h-full w-full overflow-auto scrollbar-thin">
+          {children}
+        </div>
       </div>
       
-      {/* AI Feedback Flyout - Global component accessible from ribbon */}
+      {/* AI Feedback Flyout */}
       <AiFeedbackFlyout
         isOpen={showFeedback}
         onOpenChange={setShowFeedback}

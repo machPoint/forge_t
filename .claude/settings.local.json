@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist:*)",
+      "Bash(cmd.exe //c \"tasklist /FI \"\"PID eq 26992\"\"\")",
+      "Bash(taskkill //F //PID 26992)",
+      "Bash(npm run dev:*)",
+      "Bash(start.bat)",
+      "Bash(del /F \"c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\lib\\\\themes.ts\" \"c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\lib\\\\themes\\\\simple-themes.ts\" \"c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\lib\\\\themes\\\\midnightSoftTheme.ts\" \"c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\styles\\\\theme-vars.css\")",
+      "Bash(if exist \"c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\components\\\\SimpleThemeSelector.tsx\" del /F \"c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\components\\\\SimpleThemeSelector.tsx\")",
+      "Bash(if exist \"c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\components\\\\ui\\\\ThemeSelector.tsx\" del /F \"c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\components\\\\ui\\\\ThemeSelector.tsx\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\lib\\\\themes.ts\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\lib\\\\themes\\\\simple-themes.ts\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\lib\\\\themes\\\\midnightSoftTheme.ts\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\styles\\\\theme-vars.css\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\components\\\\SimpleThemeSelector.tsx\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\components\\\\CustomizationManager.jsx\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\styles\\\\themes\\\\midnight-soft.css\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\styles\\\\utilities\\\\midnight-soft-utils.css\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\styles\\\\global-theme.css\")",
+      "Bash(cmd.exe //c \"rmdir /S /Q c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\styles\\\\themes\")",
+      "Bash(cmd.exe //c \"rmdir /S /Q c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\styles\\\\utilities\")",
+      "Bash(cmd.exe //c \"rmdir /S /Q c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\lib\\\\themes\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\components\\\\ThemeSelector.tsx\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\components\\\\ui\\\\ThemeSelector.tsx\")",
+      "Bash(cmd.exe //c \"if exist c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\lib\\\\theming rmdir /S /Q c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\lib\\\\theming\")",
+      "Bash(cmd.exe //c \"del /F c:\\\\Users\\\\X1\\\\PROJECT_FORGE\\\\forge\\\\src\\\\hooks\\\\useTheme.ts\")"
+    ]
+  }
+}

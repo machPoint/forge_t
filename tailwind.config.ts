@@ -56,27 +56,27 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Standardized app colors - use these for consistency
+        // Standardized app colors - Mapped to Semantic Theme Variables
         app: {
           bg: {
-            primary: "#0a0a0a",
-            secondary: "#141414",
-            tertiary: "#1a1a1a",
-            elevated: "#1f1f1f",
-            hover: "#252525",
-            active: "#2a2a2a",
+            primary: "hsl(var(--background))",
+            secondary: "hsl(var(--secondary))",
+            tertiary: "hsl(var(--muted))",
+            elevated: "hsl(var(--card))",
+            hover: "hsl(var(--accent))",
+            active: "hsl(var(--accent))",
           },
           border: {
-            primary: "#2a3f5f",
-            secondary: "#1a2332",
-            focus: "#3b5a8f",
-            divider: "#1a1a1a",
+            primary: "hsl(var(--border))",
+            secondary: "hsl(var(--border))",
+            focus: "hsl(var(--ring))",
+            divider: "hsl(var(--border))",
           },
           text: {
-            primary: "#e8e8e8",
-            secondary: "#9ca3af",
-            tertiary: "#6b7280",
-            disabled: "#4b5563",
+            primary: "hsl(var(--foreground))",
+            secondary: "hsl(var(--muted-foreground))",
+            tertiary: "hsl(var(--muted-foreground))",
+            disabled: "hsl(var(--muted-foreground))",
           },
         },
         journal: {

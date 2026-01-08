@@ -115,15 +115,15 @@ const CoreSidebar: React.FC<CoreSidebarProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col bg-app-sidebar">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="h-full flex flex-col bg-transparent">
+      <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-2 mb-3">
           <div className="flex items-center ml-auto gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={onToggleArchived}
-              className={showArchived ? 'bg-gray-700/20 text-gray-300 hover:text-gray-200' : 'text-gray-400'}
+              className={showArchived ? 'bg-sidebar-accent text-sidebar-foreground' : 'text-muted-foreground hover:text-sidebar-foreground'}
             >
               {showArchived ? 'Hide Archived' : 'Show Archived'}
             </Button>
@@ -139,12 +139,12 @@ const CoreSidebar: React.FC<CoreSidebarProps> = ({
         </div>
         
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder="Search core entries..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-[#3e3e42] border-gray-600 text-gray-200"
+            className="pl-10 bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground placeholder:text-muted-foreground focus-visible:ring-sidebar-ring"
           />
         </div>
       </div>
@@ -152,13 +152,13 @@ const CoreSidebar: React.FC<CoreSidebarProps> = ({
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-3">
           {isLoading ? (
-            <div className="text-center text-gray-400 py-8">
+            <div className="text-center text-muted-foreground py-8">
               <Spinner size="lg" className="mx-auto mb-2" />
               Loading core entries...
             </div>
           ) : filteredCoreEntries.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 mx-auto mb-2">
+            <div className="text-center text-muted-foreground py-8">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-muted-foreground/50 mx-auto mb-2">
                 <path d="M7 8H17L19 12H5L7 8Z" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M8 3H16L17 8H7L8 3Z" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M5 12H19L18 17H6L5 12Z" stroke="currentColor" strokeWidth="1.5" />
@@ -171,9 +171,9 @@ const CoreSidebar: React.FC<CoreSidebarProps> = ({
             filteredCoreEntries.map((entry) => (
               <Card
                 key={entry.id}
-                className={`cursor-pointer transition-all hover:bg-[#3e3e42] ${
-                  selectedCore === entry.id ? 'bg-[#0e639c]' : 'bg-[#3e3e42]'
-                } border-gray-600`}
+                className={`cursor-pointer transition-all hover:bg-sidebar-accent border-sidebar-border ${
+                  selectedCore === entry.id ? 'bg-sidebar-accent border-primary/50' : 'bg-sidebar-card/50'
+                }`}
                 onClick={() => {
                   setSelectedCore(entry.id);
                   onMemorySelect?.(entry.id);
@@ -182,12 +182,12 @@ const CoreSidebar: React.FC<CoreSidebarProps> = ({
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <span>{getTypeIcon(entry.type)}</span>
-                      <CardTitle className="text-sm text-gray-200 line-clamp-1">
+                      <span className="text-muted-foreground">{getTypeIcon(entry.type)}</span>
+                      <CardTitle className="text-sm text-sidebar-foreground line-clamp-1">
                         {entry.title}
                       </CardTitle>
                       {entry.starred && (
-                        <Star className="w-3 h-3 fill-gray-400 text-gray-400" />
+                        <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
                       )}
                     </div>
                     <Badge className={`text-xs ${getTypeColor(entry.type)}`}>
@@ -196,11 +196,11 @@ const CoreSidebar: React.FC<CoreSidebarProps> = ({
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <p className="text-xs text-gray-400 line-clamp-2 mb-2">
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                     {entry.summary}
                   </p>
                   
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground/70 mb-2">
                     <Calendar className="w-3 h-3" />
                     {formatDate(entry.createdAt)}
                   </div>
@@ -211,7 +211,7 @@ const CoreSidebar: React.FC<CoreSidebarProps> = ({
                         <Badge
                           key={tag}
                           variant="outline"
-                          className="text-xs px-1 py-0 text-gray-400 border-gray-600"
+                          className="text-xs px-1 py-0 text-muted-foreground border-sidebar-border"
                         >
                           <Tag className="w-2 h-2 mr-1" />
                           {tag}
@@ -220,7 +220,7 @@ const CoreSidebar: React.FC<CoreSidebarProps> = ({
                       {entry.tags.length > 3 && (
                         <Badge
                           variant="outline"
-                          className="text-xs px-1 py-0 text-gray-400 border-gray-600"
+                          className="text-xs px-1 py-0 text-muted-foreground border-sidebar-border"
                         >
                           +{entry.tags.length - 3}
                         </Badge>

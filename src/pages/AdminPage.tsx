@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,11 +38,13 @@ import {
   Save, 
   X,
   LogOut,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 import JournalExport from "@/components/JournalExport";
 import UpdateManager from "@/components/UpdateManager";
-import CustomizationManager from "@/components/CustomizationManager";
+import ThemeCustomizer from "@/components/ThemeCustomizer";
 import { 
   getAIInsightsPrompt, 
   saveAIInsightsPrompt, 
@@ -60,6 +62,7 @@ import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useAuth } from "@/hooks/useAuth";
 import AppHeader from "@/components/AppHeader";
 import OpalSettings from "@/components/OpalSettings";
+import opal from "@/lib/simple-opal-client";
 
 // Define icon mapping
 const iconOptions = [
@@ -78,6 +81,73 @@ const AdminPage = () => {
   const { logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [selectedModel, setSelectedModel] = useLocalStorage<string>("selectedAIModel", "gpt-4o");
+  const [availableModels, setAvailableModels] = useState<Array<{id: string, owned_by?: string}>>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+
+  // Fetch available models from OpenAI API via test_openai_connection
+  const fetchAvailableModels = async () => {
+    if (!opal.ready()) {
+      console.log('[AdminPage] OPAL not ready, skipping model fetch');
+      return;
+    }
+    
+    setLoadingModels(true);
+    try {
+      // Use test_openai_connection which returns models in its response
+      const result = await opal.callTool('test_openai_connection', {});
+      console.log('[AdminPage] Connection test result:', result);
+      
+      let models: Array<{id: string, owned_by?: string}> = [];
+      
+      // Parse the response - handle both direct and MCP wrapped formats
+      if (result && result.success && Array.isArray(result.models)) {
+        models = result.models;
+      } else if (result && result.content && Array.isArray(result.content)) {
+        try {
+          const textContent = result.content[0]?.text;
+          if (textContent) {
+            const parsed = JSON.parse(textContent);
+            if (parsed.success && Array.isArray(parsed.models)) {
+              models = parsed.models;
+            }
+          }
+        } catch (e) {
+          console.error('[AdminPage] Failed to parse models response:', e);
+        }
+      }
+      
+      if (models.length > 0) {
+        setAvailableModels(models);
+        console.log('[AdminPage] Available models:', models.map(m => m.id));
+      } else {
+        console.log('[AdminPage] No models returned, using defaults');
+      }
+    } catch (error) {
+      console.error('[AdminPage] Error fetching models:', error);
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+
+  // Fetch models when component mounts and OPAL is ready
+  useEffect(() => {
+    const handleStatusChange = (status: string) => {
+      if (status === 'ready') {
+        fetchAvailableModels();
+      }
+    };
+    
+    opal.on('statusChange', handleStatusChange);
+    
+    // If already ready, fetch immediately
+    if (opal.ready()) {
+      fetchAvailableModels();
+    }
+    
+    return () => {
+      opal.off('statusChange', handleStatusChange);
+    };
+  }, []);
 
   // State for AI Insights prompt
   const [aiInsightsPrompt, setAiInsightsPrompt] = useState<AIInsightsPrompt>(getAIInsightsPrompt());
@@ -486,17 +556,7 @@ const AdminPage = () => {
           </TabsContent>
           
           <TabsContent value="customizations" className="space-y-4">
-            <Card className="bg-app-bg-tertiary border-app-border-secondary">
-              <CardHeader>
-                <CardTitle>Customization Manager</CardTitle>
-                <CardDescription>
-                  Configure branding, themes, and AI personalities for different use cases
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <CustomizationManager />
-              </CardContent>
-            </Card>
+            <ThemeCustomizer />
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-4">
@@ -523,31 +583,52 @@ const AdminPage = () => {
                         <p className="font-medium">OpenAI Model</p>
                         <p className="text-sm text-app-text-secondary">Select which AI model to use for therapeutic responses</p>
                       </div>
-                      <Select 
-                        value={selectedModel} 
-                        onValueChange={setSelectedModel}
-                      >
-                        <SelectTrigger className="w-48">
-                          <SelectValue placeholder="Select model" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="gpt-4o">
-                            <div className="flex flex-col">
-                              <span className="font-medium">GPT-4o</span>
-                              <span className="text-xs text-app-text-secondary">Latest, most capable model</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="gpt-4o-mini">
-                            <div className="flex flex-col">
-                              <span className="font-medium">GPT-4o-mini</span>
-                              <span className="text-xs text-app-text-secondary">Faster, cost-effective version</span>
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center gap-2">
+                        <Select 
+                          value={selectedModel} 
+                          onValueChange={setSelectedModel}
+                        >
+                          <SelectTrigger className="w-56">
+                            <SelectValue placeholder="Select model" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-64 overflow-y-auto">
+                            {loadingModels ? (
+                              <div className="flex items-center justify-center p-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span className="ml-2 text-sm">Loading models...</span>
+                              </div>
+                            ) : availableModels.length > 0 ? (
+                              availableModels.map((model) => (
+                                <SelectItem key={model.id} value={model.id}>
+                                  <span className="font-mono text-sm">{model.id}</span>
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <>
+                                <SelectItem value="gpt-4o">gpt-4o</SelectItem>
+                                <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={fetchAvailableModels}
+                          disabled={loadingModels}
+                          title="Refresh models list"
+                        >
+                          <RefreshCw className={`h-4 w-4 ${loadingModels ? 'animate-spin' : ''}`} />
+                        </Button>
+                      </div>
                     </div>
+                    {availableModels.length > 0 && (
+                      <div className="text-xs text-app-text-secondary">
+                        {availableModels.length} GPT models available from OpenAI API
+                      </div>
+                    )}
                     <div className="text-xs text-app-text-tertiary">
-                      Changes take effect immediately for new AI interactions
+                      Models are fetched dynamically. Changes take effect immediately for new AI interactions.
                     </div>
                   </div>
                 </div>

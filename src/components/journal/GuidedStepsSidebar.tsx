@@ -42,25 +42,23 @@ const GuidedStepsSidebar: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col p-4 overflow-hidden bg-app-sidebar">
+    <div className="h-full flex flex-col p-4 overflow-hidden bg-background text-foreground">
       <div className="mb-4">
-        <h1 className="text-lg font-semibold text-gray-200 mb-1">{module.title}</h1>
-        <p className="text-xs text-gray-400 mb-1">{module.description}</p>
+        <h1 className="text-lg font-semibold text-foreground mb-1">{module.title}</h1>
+        <p className="text-xs text-muted-foreground mb-1">{module.description}</p>
         {/* Progress bar */}
-        <div className="w-full h-2 mt-2 mb-1" style={{
-          backgroundColor: 'var(--forge-border-primary)',
+        <div className="w-full h-2 mt-2 mb-1 bg-muted" style={{
           borderRadius: 0
         }}>
           <div
-            className="h-2 transition-all"
+            className="h-2 transition-all bg-primary"
             style={{ 
               width: `${(completedCount / totalSteps) * 100}%`, 
-              backgroundColor: 'var(--forge-button-primary)',
               borderRadius: 0 
             }}
           ></div>
         </div>
-        <div className="text-[10px] text-gray-400 mb-1">
+        <div className="text-[10px] text-muted-foreground mb-1">
           {completedCount} of {totalSteps} steps completed
         </div>
         
@@ -68,11 +66,9 @@ const GuidedStepsSidebar: React.FC = () => {
         {progress?.isComplete && (
           <Button
             onClick={() => activeModuleId && saveCompletedModuleToCore(activeModuleId)}
-            className="w-full mt-2 forge-button-primary"
+            className="w-full mt-2 bg-primary text-primary-foreground hover:bg-primary/90"
             style={{
-              backgroundColor: 'var(--forge-button-primary)',
-              borderColor: 'var(--forge-button-primary)',
-              color: 'white'
+              borderRadius: 'var(--radius)'
             }}
             size="sm"
           >
@@ -85,17 +81,17 @@ const GuidedStepsSidebar: React.FC = () => {
         {/* Introduction step - only show if module has an introduction */}
         {module.introduction && (
           <div
-            className={`p-2 hover:bg-[#3e3e42] cursor-pointer ${
-              currentStep === -1 ? 'bg-[#0e639c]' : ''
+            className={`p-2 hover:bg-accent cursor-pointer ${
+              currentStep === -1 ? 'bg-accent text-accent-foreground' : ''
             }`}
             style={{ borderRadius: 0 }}
             onClick={handleIntroClick}
           >
             <div className="flex items-start">
-              <Info className="w-4 h-4 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
+              <Info className="w-4 h-4 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <h3 className="text-xs font-medium text-white">Introduction</h3>
-                <p className="text-xs text-gray-400 mt-1">Module Overview & Instructions</p>
+                <h3 className="text-xs font-medium text-foreground">Introduction</h3>
+                <p className="text-xs text-muted-foreground mt-1">Module Overview & Instructions</p>
               </div>
             </div>
           </div>
@@ -111,31 +107,31 @@ const GuidedStepsSidebar: React.FC = () => {
           return (
             <div
               key={step.id}
-              className={`p-2 hover:bg-[#3e3e42] cursor-pointer ${
-                isActive ? 'bg-[#0e639c]' : ''
+              className={`p-2 hover:bg-accent cursor-pointer ${
+                isActive ? 'bg-accent text-accent-foreground' : ''
               }`}
               style={{ borderRadius: 0 }}
               onClick={() => handleStepClick(idx)}
             >
               <div className="flex items-start">
                 <div className={`w-2 h-2 rounded-full mt-1 mr-3 flex-shrink-0 ${
-                  status === "completed" ? 'bg-green-400' : 
-                  status === "in-progress" ? 'bg-yellow-400' : 
-                  'bg-gray-400'
+                  status === "completed" ? 'bg-green-500' : 
+                  status === "in-progress" ? 'bg-yellow-500' : 
+                  'bg-muted-foreground/30'
                 }`}></div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-medium text-white">Step {idx + 1}</h3>
+                    <h3 className="text-xs font-medium text-foreground">Step {idx + 1}</h3>
                     {status === "completed" && (
-                      <span className="text-[10px] bg-gray-700 text-gray-200 px-2 py-0.5" style={{borderRadius: 0}}>Completed</span>
+                      <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5" style={{borderRadius: 0}}>Completed</span>
                     )}
                     {status === "in-progress" && (
-                      <span className="text-[10px] bg-gray-800 text-gray-300 px-2 py-0.5" style={{borderRadius: 0}}>In Progress</span>
+                      <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5" style={{borderRadius: 0}}>In Progress</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">{step.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{step.title}</p>
                   {typeof stepEntry === 'object' && stepEntry?.lastSaved && (
-                    <p className="text-xs text-gray-500 mt-1">Last saved: {format(new Date(stepEntry.lastSaved), "MMM d, yyyy HH:mm")}</p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">Last saved: {format(new Date(stepEntry.lastSaved), "MMM d, yyyy HH:mm")}</p>
                   )}
                 </div>
               </div>
@@ -146,11 +142,11 @@ const GuidedStepsSidebar: React.FC = () => {
       
       {/* Reset Module Button - show when there's any progress */}
       {(progress && (Object.keys(entries).length > 0 || progress.isComplete)) && (
-        <div className="mt-4 pt-4 border-t border-gray-600">
+        <div className="mt-4 pt-4 border-t border-border">
           <Button
             onClick={handleResetModule}
             variant="outline"
-            className="w-full text-gray-300 border-gray-600 hover:bg-gray-600 hover:text-white"
+            className="w-full text-muted-foreground border-border hover:bg-destructive hover:text-destructive-foreground"
             size="sm"
           >
             <RotateCcw className="w-4 h-4 mr-2" />

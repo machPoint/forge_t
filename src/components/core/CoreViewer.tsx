@@ -52,7 +52,7 @@ const CoreViewer: React.FC<CoreViewerProps> = ({ selectedMemoryId, memories, onD
 
   if (!selectedMemoryId) {
     return (
-      <div className="h-full flex items-center justify-center bg-[#1d1d1d] text-gray-400">
+      <div className="h-full flex items-center justify-center bg-card text-muted-foreground">
         <div className="text-center">
           <h3 className="text-lg font-medium mb-2">Select a Core Entry</h3>
           <p className="text-sm">Choose a core entry from the sidebar to view its details</p>
@@ -63,7 +63,7 @@ const CoreViewer: React.FC<CoreViewerProps> = ({ selectedMemoryId, memories, onD
 
   if (!selectedCore) {
     return (
-      <div className="h-full flex items-center justify-center bg-[#1d1d1d] text-gray-400">
+      <div className="h-full flex items-center justify-center bg-card text-muted-foreground">
         <div className="text-center">
           <h3 className="text-lg font-medium mb-2">Core Entry Not Found</h3>
           <p className="text-sm">The selected core entry could not be loaded</p>
@@ -85,8 +85,8 @@ const CoreViewer: React.FC<CoreViewerProps> = ({ selectedMemoryId, memories, onD
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#1d1d1d] overflow-hidden">
-      <div className="border-b border-gray-700 p-6">
+    <div className="h-full flex flex-col bg-card overflow-hidden">
+      <div className="border-b border-border p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
             <div className="w-full">
@@ -94,22 +94,22 @@ const CoreViewer: React.FC<CoreViewerProps> = ({ selectedMemoryId, memories, onD
                 <Input
                   value={editedTitle}
                   onChange={(e) => setEditedTitle(e.target.value)}
-                  className="text-2xl font-bold bg-[#2a2a2a] border-gray-600 text-gray-100 mb-2"
+                  className="text-2xl font-bold bg-secondary border-border text-foreground mb-2"
                 />
               ) : (
-                <h1 className="text-2xl font-bold text-gray-100 mb-2">
+                <h1 className="text-2xl font-bold text-foreground mb-2">
                   {selectedCore.title}
                 </h1>
               )}
-              <div className="flex items-center gap-4 text-sm text-gray-400">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   {formatDate(selectedCore.createdAt)}
                 </div>
-                <Badge className="bg-gray-700/20 text-gray-300">
+                <Badge className="bg-muted text-muted-foreground">
                   {selectedCore.type}
                 </Badge>
-                <span className="text-gray-500">Source: {selectedCore.source}</span>
+                <span className="text-muted-foreground/70">Source: {selectedCore.source}</span>
                 {selectedCore.starred && (
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
                 )}
@@ -199,7 +199,7 @@ const CoreViewer: React.FC<CoreViewerProps> = ({ selectedMemoryId, memories, onD
         <div className="p-6">
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-200 mb-2">Tags</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Tags</h3>
               {isEditing ? (
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
@@ -207,13 +207,13 @@ const CoreViewer: React.FC<CoreViewerProps> = ({ selectedMemoryId, memories, onD
                       <Badge
                         key={index}
                         variant="outline"
-                        className="text-gray-300 border-gray-500 flex items-center gap-1"
+                        className="text-muted-foreground border-border flex items-center gap-1"
                       >
                         <Tag className="w-3 h-3" />
                         {tag}
                         <button
                           onClick={() => setEditedTags(editedTags.filter((_, i) => i !== index))}
-                          className="ml-1 text-gray-400 hover:text-red-400"
+                          className="ml-1 text-muted-foreground hover:text-destructive"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -225,7 +225,7 @@ const CoreViewer: React.FC<CoreViewerProps> = ({ selectedMemoryId, memories, onD
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
                       placeholder="Add new tag..."
-                      className="bg-[#333] border-gray-600 text-gray-300"
+                      className="bg-secondary border-border text-foreground"
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && newTag.trim()) {
                           if (!editedTags.includes(newTag.trim())) {
@@ -256,7 +256,7 @@ const CoreViewer: React.FC<CoreViewerProps> = ({ selectedMemoryId, memories, onD
                       <Badge
                         key={tag}
                         variant="outline"
-                        className="text-gray-300 border-gray-500"
+                        className="text-muted-foreground border-border"
                       >
                         <Tag className="w-3 h-3 mr-1" />
                         {tag}
@@ -264,39 +264,39 @@ const CoreViewer: React.FC<CoreViewerProps> = ({ selectedMemoryId, memories, onD
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 italic">No tags assigned</p>
+                  <p className="text-muted-foreground/70 italic">No tags assigned</p>
                 )
               )}
             </div>
 
             {selectedCore.summary && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-200 mb-2">Summary</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Summary</h3>
                 {isEditing ? (
                   <Textarea
                     value={editedSummary}
                     onChange={(e) => setEditedSummary(e.target.value)}
-                    className="bg-[#2a2a2a] border-gray-600 text-gray-300 min-h-[80px]"
+                    className="bg-secondary border-border text-foreground min-h-[80px]"
                     placeholder="Enter summary..."
                   />
                 ) : (
-                  <p className="text-gray-300 leading-relaxed">{selectedCore.summary}</p>
+                  <p className="text-muted-foreground leading-relaxed">{selectedCore.summary}</p>
                 )}
               </div>
             )}
 
             <div>
-              <h3 className="text-lg font-semibold text-gray-200 mb-2">Content</h3>
-              <div className="bg-[#2a2a2a] rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-foreground mb-2">Content</h3>
+              <div className="bg-secondary rounded-lg p-4">
                 {isEditing ? (
                   <Textarea
                     value={editedContent}
                     onChange={(e) => setEditedContent(e.target.value)}
-                    className="bg-[#333] border-gray-600 text-gray-300 min-h-[200px] w-full"
+                    className="bg-muted border-border text-foreground min-h-[200px] w-full"
                     placeholder="Enter content..."
                   />
                 ) : (
-                  <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-foreground leading-relaxed whitespace-pre-wrap">
                     {selectedCore.content}
                   </p>
                 )}

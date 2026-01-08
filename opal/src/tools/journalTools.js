@@ -34,30 +34,41 @@ function registerJournalTools(configs, wss) {
           }
         },
         required: ['apiKey']
-      }
-    },
-    async (params) => {
-      try {
-        const { apiKey } = params;
-        
-        if (!apiKey || !apiKey.startsWith('sk-')) {
-          throw new Error('Invalid OpenAI API key format');
+      },
+      _internal: {
+        processor: async (params) => {
+          try {
+            const { apiKey } = params;
+            
+            if (!apiKey || !apiKey.startsWith('sk-')) {
+              throw new Error('Invalid OpenAI API key format');
+            }
+            
+            // Update the environment variable
+            process.env.OPENAI_API_KEY = apiKey;
+            
+            // Also update the ConfigLoader's cached key
+            try {
+              const configLoader = require('../config-loader');
+              configLoader.setOpenAIApiKey(apiKey);
+              logger.info('OpenAI API key updated in ConfigLoader cache');
+            } catch (e) {
+              logger.warn('Could not update ConfigLoader cache:', e.message);
+            }
+            
+            logger.info(`OpenAI API key updated in environment: ${apiKey.substring(0, 7)}...`);
+            
+            logger.info('OpenAI API key updated successfully');
+            
+            return {
+              success: true,
+              message: 'OpenAI API key updated successfully'
+            };
+          } catch (error) {
+            logger.error('Error updating OpenAI API key:', error);
+            throw error;
+          }
         }
-        
-        // Update the environment variable
-        process.env.OPENAI_API_KEY = apiKey;
-        
-        logger.info(`OpenAI API key updated in environment: ${apiKey.substring(0, 7)}...`);
-        
-        logger.info('OpenAI API key updated successfully');
-        
-        return {
-          success: true,
-          message: 'OpenAI API key updated successfully'
-        };
-      } catch (error) {
-        logger.error('Error updating OpenAI API key:', error);
-        throw error;
       }
     }
   );
@@ -281,16 +292,25 @@ function registerJournalTools(configs, wss) {
             
             if (response.ok) {
               const data = await response.json();
-              const modelCount = data.data ? data.data.length : 0;
+              const allModels = data.data || [];
+              const modelCount = allModels.length;
+              
+              // Filter to GPT models and return them
+              const gptModels = allModels
+                .filter(m => m.id.toLowerCase().includes('gpt'))
+                .sort((a, b) => a.id.localeCompare(b.id))
+                .map(m => ({ id: m.id, owned_by: m.owned_by }));
               
               console.log('[test_openai_connection] ✅ SUCCESS - API connection working');
+              console.log('[test_openai_connection] Found', gptModels.length, 'GPT models');
               logger.info('[test_openai_connection] Successfully connected to OpenAI API');
               
               return {
                 success: true,
                 message: 'OpenAI API connection successful',
                 details: `Connected successfully. ${modelCount} models available.`,
-                modelCount: modelCount
+                modelCount: modelCount,
+                models: gptModels
               };
             } else {
               const errorText = await response.text();
@@ -313,6 +333,112 @@ function registerJournalTools(configs, wss) {
               success: false,
               error: 'Failed to test OpenAI API connection',
               details: error.message
+            };
+          }
+        }
+      }
+    }
+  );
+
+  // List available OpenAI models tool
+  toolCreator.createTool(
+    configs,
+    wss,
+    {
+      name: 'list_openai_models',
+      description: 'List available OpenAI models from the API',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          filter: { 
+            type: 'string', 
+            description: 'Optional filter to only show models containing this string (e.g., "gpt")',
+            default: 'gpt'
+          }
+        },
+        required: []
+      },
+      _internal: {
+        processor: async (params, context) => {
+          logger.info('[list_openai_models] Fetching available models from OpenAI');
+          
+          try {
+            // Try multiple sources for API key (same as promptsService)
+            let apiKey = process.env.OPENAI_API_KEY || 
+                         process.env.OPENAI_KEY || 
+                         process.env.API_KEY_OPENAI;
+            
+            // Fallback to config-loader
+            if (!apiKey) {
+              try {
+                const configLoader = require('../config-loader');
+                apiKey = configLoader.getOpenAIApiKey();
+              } catch (e) {
+                logger.warn('[list_openai_models] Config loader fallback failed:', e.message);
+              }
+            }
+            
+            if (!apiKey) {
+              return {
+                success: false,
+                error: 'OpenAI API key not configured',
+                models: []
+              };
+            }
+            
+            logger.info('[list_openai_models] API key found, length:', apiKey.length);
+            
+            const fetch = require('node-fetch');
+            const response = await fetch('https://api.openai.com/v1/models', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              logger.error('[list_openai_models] API error:', response.status, errorText);
+              return {
+                success: false,
+                error: `OpenAI API error: ${response.status}`,
+                models: []
+              };
+            }
+            
+            const data = await response.json();
+            let models = data.data || [];
+            
+            // Filter to only GPT models by default (or custom filter)
+            const filter = params.filter || 'gpt';
+            if (filter) {
+              models = models.filter(m => m.id.toLowerCase().includes(filter.toLowerCase()));
+            }
+            
+            // Sort by id for consistent ordering
+            models.sort((a, b) => a.id.localeCompare(b.id));
+            
+            // Map to simpler format
+            const modelList = models.map(m => ({
+              id: m.id,
+              owned_by: m.owned_by,
+              created: m.created
+            }));
+            
+            logger.info(`[list_openai_models] Found ${modelList.length} models matching filter "${filter}"`);
+            
+            return {
+              success: true,
+              models: modelList,
+              count: modelList.length
+            };
+          } catch (error) {
+            logger.error('[list_openai_models] Exception:', error);
+            return {
+              success: false,
+              error: error.message,
+              models: []
             };
           }
         }

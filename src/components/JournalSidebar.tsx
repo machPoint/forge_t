@@ -148,19 +148,19 @@ const JournalSidebar: React.FC = () => {
 
 
   return (
-    <div className="h-full flex flex-col bg-app-sidebar text-white" style={{ borderRadius: 0 }}>
+    <div className="h-full flex flex-col bg-background text-foreground" style={{ borderRadius: 0 }}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-600">
-        <h1 className="text-sm font-medium text-white">Journal</h1>
+      <div className="p-4 border-b border-border">
+        <h1 className="text-sm font-medium text-foreground">Journal</h1>
       </div>
 
       {/* Action Area - Icon Only */}
-      <div className="flex justify-center items-center gap-2 p-3 border-b border-gray-600">
+      <div className="flex justify-center items-center gap-2 p-3 border-b border-border">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => addEntry({ title: "New Entry", content: "" })}
-          className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-[#3e3e42]"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent"
           aria-label="New Entry"
         >
           <PlusCircle className="w-4 h-4" />
@@ -169,7 +169,7 @@ const JournalSidebar: React.FC = () => {
           variant="ghost"
           size="sm"
           onClick={handleSave}
-          className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-[#3e3e42]"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent"
           aria-label="Save"
         >
           <Save className="w-4 h-4" />
@@ -178,7 +178,7 @@ const JournalSidebar: React.FC = () => {
           variant="ghost"
           size="sm"
           onClick={handleSaveToCore}
-          className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-[#3e3e42]"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent"
           aria-label="Save to Core"
         >
           <Database className="w-4 h-4" />
@@ -187,7 +187,7 @@ const JournalSidebar: React.FC = () => {
           variant="ghost"
           size="sm"
           onClick={handleAIFeedback}
-          className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-[#3e3e42]"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent"
           aria-label="AI Feedback"
         >
           <MessageSquare className="w-4 h-4" />
@@ -195,27 +195,27 @@ const JournalSidebar: React.FC = () => {
       </div>
 
       {/* Pinned Entries */}
-      <div className="px-4 py-2 border-b border-gray-600">
+      <div className="px-4 py-2 border-b border-border">
         <div className="flex items-center mb-2">
-          <Pin className="w-4 h-4 mr-2 text-blue-400" />
-          <h2 className="text-sm font-medium text-gray-300">PINNED ENTRIES</h2>
+          <Pin className="w-4 h-4 mr-2 text-primary" />
+          <h2 className="text-sm font-medium text-muted-foreground">PINNED ENTRIES</h2>
         </div>
         
         <div className="space-y-1 max-h-32 overflow-y-auto">
           {recentEntries.filter(entry => entry.pinned).map(entry => (
             <div 
               key={entry.id} 
-              className={`p-2 hover:bg-[#3e3e42] cursor-pointer ${
-                selectedEntry?.id === entry.id ? 'bg-[#0e639c]' : ''
+              className={`p-2 hover:bg-accent cursor-pointer ${
+                selectedEntry?.id === entry.id ? 'bg-accent text-accent-foreground' : ''
               }`} 
               style={{ borderRadius: 0 }}
               onClick={() => handleEntryClick(entry)}
             >
               <div className="flex items-start">
-                <div className="w-2 h-2 bg-blue-400 rounded-full mt-1 mr-3 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-primary rounded-full mt-1 mr-3 flex-shrink-0"></div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xs font-medium text-white truncate">{entry.title}</h3>
-                  <p className="text-xs text-gray-400">
+                  <h3 className="text-xs font-medium text-foreground truncate">{entry.title}</h3>
+                  <p className="text-xs text-muted-foreground">
                     {new Date(entry.createdAt).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric',
@@ -223,7 +223,7 @@ const JournalSidebar: React.FC = () => {
                       minute: '2-digit'
                     })}
                   </p>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {(entry.content || '').replace(/<[^>]*>/g, '').substring(0, 60)}...
                   </p>
                 </div>
@@ -231,7 +231,7 @@ const JournalSidebar: React.FC = () => {
             </div>
           ))}
           {recentEntries.filter(entry => entry.pinned).length === 0 && (
-            <p className="text-xs text-gray-500 italic">No pinned entries</p>
+            <p className="text-xs text-muted-foreground italic">No pinned entries</p>
           )}
         </div>
       </div>
@@ -240,15 +240,15 @@ const JournalSidebar: React.FC = () => {
       <div className="flex-1 min-h-0 px-4 pb-4 flex flex-col">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
-            <Clock className="w-4 h-4 mr-2 text-gray-400" />
-            <h2 className="text-sm font-medium text-gray-300">
+            <Clock className="w-4 h-4 mr-2 text-muted-foreground" />
+            <h2 className="text-sm font-medium text-muted-foreground">
               {selectedDate ? `ENTRIES FOR ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'RECENT ENTRIES'}
             </h2>
           </div>
           {selectedDate && (
             <button 
               onClick={clearDateFilter}
-              className="text-xs text-gray-400 hover:text-white"
+              className="text-xs text-muted-foreground hover:text-foreground"
             >
               Clear
             </button>
@@ -259,17 +259,17 @@ const JournalSidebar: React.FC = () => {
           {recentEntries.filter(entry => !entry.pinned).map(entry => (
             <div 
               key={entry.id} 
-              className={`p-2 hover:bg-[#3e3e42] cursor-pointer ${
-                selectedEntry?.id === entry.id ? 'bg-[#0e639c]' : ''
+              className={`p-2 hover:bg-accent cursor-pointer ${
+                selectedEntry?.id === entry.id ? 'bg-accent text-accent-foreground' : ''
               }`} 
               style={{ borderRadius: 0 }}
               onClick={() => handleEntryClick(entry)}
             >
               <div className="flex items-start">
-                <div className="w-2 h-2 bg-white rounded-full mt-1 mr-3 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-foreground/20 rounded-full mt-1 mr-3 flex-shrink-0"></div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xs font-medium text-white truncate">{entry.title}</h3>
-                  <p className="text-xs text-gray-400">
+                  <h3 className="text-xs font-medium text-foreground truncate">{entry.title}</h3>
+                  <p className="text-xs text-muted-foreground">
                     {new Date(entry.createdAt).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric',
@@ -277,7 +277,7 @@ const JournalSidebar: React.FC = () => {
                       minute: '2-digit'
                     })}
                   </p>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {(entry.content || '').replace(/<[^>]*>/g, '').substring(0, 60)}...
                   </p>
                 </div>
@@ -288,21 +288,21 @@ const JournalSidebar: React.FC = () => {
       </div>
 
       {/* Calendar - at bottom */}
-      <div className="flex-shrink-0 px-4 py-2 border-t border-gray-600">
+      <div className="flex-shrink-0 px-4 py-2 border-t border-border">
         {/* Calendar header */}
         <div className="flex items-center justify-between mb-2">
           <button 
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             ‹
           </button>
-          <h3 className="text-sm font-medium text-white">
+          <h3 className="text-sm font-medium text-foreground">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h3>
           <button 
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             ›
           </button>
@@ -311,7 +311,7 @@ const JournalSidebar: React.FC = () => {
         {/* Day headers */}
         <div className="grid grid-cols-7 gap-1 mb-1">
           {dayNames.map((day, index) => (
-            <div key={`day-${index}`} className="text-xs text-gray-400 text-center py-1">
+            <div key={`day-${index}`} className="text-xs text-muted-foreground text-center py-1">
               {day}
             </div>
           ))}
@@ -323,16 +323,16 @@ const JournalSidebar: React.FC = () => {
             <div 
               key={index} 
               className={`
-                relative text-xs text-center py-1 cursor-pointer hover:bg-[#3e3e42]
-                ${day.isCurrentMonth ? 'text-white' : 'text-gray-600'}
-                ${day.date.toDateString() === new Date().toDateString() ? 'bg-[#0e639c]' : ''}
-                ${selectedDate && day.date.toDateString() === selectedDate.toDateString() ? 'bg-[#1177bb]' : ''}
+                relative text-xs text-center py-1 cursor-pointer hover:bg-accent
+                ${day.isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}
+                ${day.date.toDateString() === new Date().toDateString() ? 'bg-primary text-primary-foreground' : ''}
+                ${selectedDate && day.date.toDateString() === selectedDate.toDateString() ? 'bg-accent ring-1 ring-primary' : ''}
               `}
               onClick={() => handleDateClick(day.date)}
             >
               {day.date.getDate()}
               {entriesByDate[day.date.toDateString()] && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-400 rounded-full"></div>
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></div>
               )}
             </div>
           ))}

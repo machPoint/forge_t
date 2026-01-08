@@ -344,19 +344,19 @@ Keep responses conversational and not overly clinical.`;
   );
 
   return (
-    <div className={cn("flex h-full overflow-hidden", className)} style={{backgroundColor: '#2a2a2a'}}>
+    <div className={cn("flex h-full overflow-hidden bg-background", className)}>
       {/* Saved Chats Sidebar */}
       {showSavedChats && (
-        <div className="w-80 border-r border-gray-700 bg-[#1f1f1f] flex flex-col">
+        <div className="w-80 border-r border-border bg-card flex flex-col">
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-gray-700">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-gray-100">Saved Chats</h3>
+              <h3 className="text-lg font-semibold text-foreground">Saved Chats</h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowSavedChats(false)}
-                className="text-gray-400 hover:text-gray-200"
+                className="text-muted-foreground hover:text-foreground"
               >
                 ×
               </Button>
@@ -369,7 +369,7 @@ Keep responses conversational and not overly clinical.`;
                 placeholder="Search saved chats..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-md text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
@@ -378,10 +378,10 @@ Keep responses conversational and not overly clinical.`;
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-2">
               {filteredChats.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-muted-foreground">
                   <MessageCircle className="w-8 h-8 mx-auto mb-2" />
                   <p className="text-sm">No saved chats yet</p>
-                  <p className="text-xs text-gray-500">Start a conversation to save it</p>
+                  <p className="text-xs text-muted-foreground/70">Start a conversation to save it</p>
                 </div>
               ) : (
                 filteredChats.map((chat) => (
@@ -389,18 +389,18 @@ Keep responses conversational and not overly clinical.`;
                     key={chat.id}
                     className={`p-3 rounded-lg cursor-pointer transition-colors ${
                       selectedChatId === chat.id
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-[#2a2a2a] hover:bg-[#333333] text-gray-200'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary hover:bg-accent text-foreground'
                     }`}
                     onClick={() => handleLoadChat(chat.id)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium truncate mb-1">{chat.title}</h4>
-                        <p className="text-xs text-gray-400 mb-2">
+                        <p className="text-xs text-muted-foreground mb-2">
                           {chat.messages.length} messages
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           {chat.updatedAt.toLocaleDateString()}
                         </p>
                       </div>
@@ -411,7 +411,7 @@ Keep responses conversational and not overly clinical.`;
                           e.stopPropagation();
                           handleDeleteChat(chat.id);
                         }}
-                        className="text-gray-400 hover:text-red-400 p-1 h-6 w-6"
+                        className="text-muted-foreground hover:text-destructive p-1 h-6 w-6"
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>
@@ -427,23 +427,23 @@ Keep responses conversational and not overly clinical.`;
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Header */}
-        <div className="border-b border-gray-700 p-4 bg-[#2a2a2a]">
+        <div className="border-b border-border p-4 bg-card">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowSavedChats(!showSavedChats)}
-                className="text-gray-400 hover:text-gray-200"
+                className="text-muted-foreground hover:text-foreground"
               >
                 {showSavedChats ? '←' : '→'}
               </Button>
-              <MessageCircle className="w-6 h-6 text-gray-400" />
+              <MessageCircle className="w-6 h-6 text-muted-foreground" />
               <div>
-                <h2 className="text-lg font-semibold text-gray-100">
+                <h2 className="text-lg font-semibold text-foreground">
                   AI Chat
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Therapeutic conversation and support
                 </p>
               </div>
@@ -451,7 +451,7 @@ Keep responses conversational and not overly clinical.`;
             
             <div className="flex items-center gap-2">
               {selectedChatId && (
-                <Badge variant="outline" className="text-xs text-blue-400 border-blue-400">
+                <Badge variant="outline" className="text-xs text-primary border-primary">
                   Loaded Chat
                 </Badge>
               )}
@@ -464,7 +464,7 @@ Keep responses conversational and not overly clinical.`;
                 size="sm"
                 onClick={handleSaveChat}
                 disabled={messages.length <= 1}
-                className="text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white"
+                className="text-primary border-primary hover:bg-primary hover:text-primary-foreground"
               >
                 {selectedChatId ? 'Update Chat' : 'Save Chat'}
               </Button>
@@ -491,11 +491,11 @@ Keep responses conversational and not overly clinical.`;
         </div>
 
         {/* Messages Area */}
-        <ScrollArea className="flex-1 p-4 min-h-0" ref={scrollAreaRef} style={{backgroundColor: '#2a2a2a'}}>
-          <div className="space-y-4" style={{backgroundColor: '#2a2a2a'}}>
+        <ScrollArea className="flex-1 p-4 min-h-0 bg-background" ref={scrollAreaRef}>
+          <div className="space-y-4">
             {messages.length === 0 ? (
-              <div className="text-center text-gray-500 py-12">
-                <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+              <div className="text-center text-muted-foreground py-12">
+                <MessageCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-medium mb-2">Start a Conversation</h3>
                 <p className="text-sm">
                   Share what's on your mind and I'll help you explore it together.

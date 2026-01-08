@@ -8,13 +8,10 @@ import { PlusCircle, Edit } from "lucide-react";
 import { useJournal } from "@/hooks/useJournal";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
-import { useTheme } from "@/lib/themes/simple-themes";
-
 const ModulesPage: React.FC = () => {
   const navigate = useNavigate();
   const { modules } = useModules();
   const { startNewModuleSession, moduleProgress } = useJournal();
-  const { theme } = useTheme();
 
   const renderIcon = (iconName: string) => {
     // Cast to unknown first to avoid TypeScript error
@@ -42,31 +39,31 @@ const ModulesPage: React.FC = () => {
   const [selectedModule, setSelectedModule] = React.useState<string | null>(null);
 
   return (
-    <div className="h-full flex" style={{ backgroundColor: theme.styles.primaryBg, color: theme.styles.primaryText }}>
+    <div className="h-full flex bg-background text-foreground">
         {/* Left Sidebar - Module List */}
-        <div className="bg-app-sidebar border-r min-w-[280px] max-w-[320px] w-[25%] flex-shrink-0 transition-all duration-200" style={{ borderColor: theme.styles.primaryBorder }}>
-          <div className="p-4 border-b border-app-border-divider">
+        <div className="bg-background border-r border-border min-w-[280px] max-w-[320px] w-[25%] flex-shrink-0 transition-all duration-200">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-semibold text-app-text-primary">Modules</h2>
+              <h2 className="text-lg font-semibold text-foreground">Modules</h2>
               <Button 
                 onClick={() => navigate("/add-module")} 
                 size="sm"
-                className="bg-app-bg-secondary hover:bg-app-bg-tertiary text-app-text-primary border-app-border-primary"
+                className="bg-accent hover:bg-muted text-foreground border border-border"
               >
                 <PlusCircle className="h-3 w-3" />
               </Button>
             </div>
-            <p className="text-sm text-app-text-secondary">Select a module to begin</p>
+            <p className="text-sm text-muted-foreground">Select a module to begin</p>
           </div>
           
           <div className="flex-1 overflow-y-auto">
             {modules.length === 0 ? (
               <div className="p-4 text-center">
-                <p className="text-app-text-tertiary text-sm mb-4">No modules available</p>
+                <p className="text-muted-foreground text-sm mb-4">No modules available</p>
                 <Button 
                   onClick={() => navigate("/add-module")} 
                   size="sm"
-                  className="bg-app-bg-secondary hover:bg-app-bg-tertiary text-app-text-primary"
+                  className="bg-accent hover:bg-muted text-foreground"
                 >
                   <PlusCircle className="h-3 w-3 mr-1" />
                   Create Module
@@ -94,39 +91,39 @@ const ModulesPage: React.FC = () => {
                     <Card 
                       key={module.id}
                       className={cn(
-                        "cursor-pointer transition-all duration-200 border-gray-600",
+                        "cursor-pointer transition-all duration-200 border-border",
                         isSelected 
-                          ? "bg-[#0e639c]" 
-                          : "bg-[#3e3e42] hover:bg-[#4a4a4f]"
+                          ? "bg-accent border-primary" 
+                          : "bg-card hover:bg-accent/50"
                       )}
                       onClick={() => setSelectedModule(module.id)}
                     >
                       <CardContent className="p-3">
                         <div className="flex items-start space-x-3">
-                          <div className="bg-gray-700 p-1.5 rounded-md flex-shrink-0">
+                          <div className="bg-muted p-1.5 rounded-md flex-shrink-0">
                             {renderIcon(module.icon)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-app-text-primary text-sm truncate">
+                            <h3 className="font-medium text-foreground text-sm truncate">
                               {module.title}
                             </h3>
-                            <p className="text-xs text-app-text-secondary mb-2">
+                            <p className="text-xs text-muted-foreground mb-2">
                               {module.category}
                             </p>
                             
                             <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-app-text-tertiary">{totalSteps} steps</span>
+                              <span className="text-muted-foreground">{totalSteps} steps</span>
                               {progress && (
-                                <span className="font-medium text-app-text-secondary">
+                                <span className="font-medium text-foreground">
                                   {percentComplete}%
                                 </span>
                               )}
                             </div>
                             
                             {progress && (
-                              <div className="w-full bg-app-bg-secondary rounded-full h-1">
+                              <div className="w-full bg-muted rounded-full h-1">
                                 <div 
-                                  className="bg-app-bg-active h-1 rounded-full transition-all duration-300" 
+                                  className="bg-primary h-1 rounded-full transition-all duration-300" 
                                   style={{ width: `${percentComplete}%` }}
                                 ></div>
                               </div>
@@ -143,7 +140,7 @@ const ModulesPage: React.FC = () => {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto p-6" style={{ backgroundColor: theme.styles.primaryBg }}>
+        <div className="flex-1 overflow-y-auto p-6 bg-background">
           {selectedModule ? (
             <div>
               {(() => {
@@ -167,33 +164,33 @@ const ModulesPage: React.FC = () => {
                 return (
                   <div className="max-w-2xl">
                     <div className="flex items-center mb-6">
-                      <div className="mr-4 bg-app-bg-secondary p-3 rounded-lg">
+                      <div className="mr-4 bg-accent p-3 rounded-lg">
                         {renderIcon(module.icon)}
                       </div>
                       <div>
-                        <h1 className="text-2xl font-bold text-app-text-primary">{module.title}</h1>
-                        <p className="text-app-text-secondary">{module.category}</p>
+                        <h1 className="text-2xl font-bold text-foreground">{module.title}</h1>
+                        <p className="text-muted-foreground">{module.category}</p>
                       </div>
                     </div>
                     
-                    <p className="text-app-text-primary mb-6 leading-relaxed">
+                    <p className="text-foreground mb-6 leading-relaxed">
                       {module.description}
                     </p>
                     
-                    <div className="bg-app-bg-secondary rounded-lg p-4 mb-6">
+                    <div className="bg-card border border-border rounded-lg p-4 mb-6">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-app-text-secondary">Progress</span>
-                        <span className="text-sm font-medium text-app-text-primary">
+                        <span className="text-sm text-muted-foreground">Progress</span>
+                        <span className="text-sm font-medium text-foreground">
                           {progress ? `${completedCount}/${totalSteps} steps` : `0/${totalSteps} steps`}
                         </span>
                       </div>
-                      <div className="w-full bg-app-bg-tertiary rounded-full h-2 mb-2">
+                      <div className="w-full bg-muted rounded-full h-2 mb-2">
                         <div 
-                          className="bg-app-bg-active h-2 rounded-full transition-all duration-300" 
+                          className="bg-primary h-2 rounded-full transition-all duration-300" 
                           style={{ width: `${percentComplete}%` }}
                         ></div>
                       </div>
-                      <p className="text-xs text-app-text-tertiary">
+                      <p className="text-xs text-muted-foreground">
                         {percentComplete}% complete
                       </p>
                     </div>
@@ -201,14 +198,14 @@ const ModulesPage: React.FC = () => {
                     <div className="flex space-x-3">
                       <Button 
                         onClick={() => handleSelectModule(module.id)}
-                        className="bg-app-bg-secondary hover:bg-app-bg-tertiary text-app-text-primary"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
                       >
                         {progress && !progress.isComplete ? "Continue Module" : "Start Module"}
                       </Button>
                       <Button 
                         onClick={() => navigate(`/add-module?edit=${module.id}`)}
                         variant="outline"
-                        className="border-app-border-primary text-app-text-secondary hover:bg-app-bg-secondary"
+                        className="border-border text-muted-foreground hover:bg-accent"
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Module
@@ -221,10 +218,10 @@ const ModulesPage: React.FC = () => {
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <h2 className="text-xl font-medium text-app-text-secondary mb-2">Guided Modules</h2>
-                <p className="text-app-text-tertiary mb-8">Select a guided module from the sidebar to begin a structured writing exercise.</p>
+                <h2 className="text-xl font-medium text-foreground mb-2">Guided Modules</h2>
+                <p className="text-muted-foreground mb-8">Select a guided module from the sidebar to begin a structured writing exercise.</p>
                 {modules.length === 0 && (
-                  <Button onClick={() => navigate("/add-module")} className="bg-app-bg-secondary hover:bg-app-bg-tertiary text-app-text-primary">
+                  <Button onClick={() => navigate("/add-module")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Browse Modules
                   </Button>
