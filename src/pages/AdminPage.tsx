@@ -292,7 +292,7 @@ const AdminPage = () => {
             <TabsTrigger value="personas">AI Personas</TabsTrigger>
             <TabsTrigger value="insights">AI Insights</TabsTrigger>
             <TabsTrigger value="chat">Chat System</TabsTrigger>
-            <TabsTrigger value="connection">OPAL Connection</TabsTrigger>
+            <TabsTrigger value="connection">Connection</TabsTrigger>
             <TabsTrigger value="customizations">Customizations</TabsTrigger>
             <TabsTrigger value="settings">System Settings</TabsTrigger>
           </TabsList>
@@ -300,9 +300,9 @@ const AdminPage = () => {
           <TabsContent value="connection" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>OPAL Connection Settings</CardTitle>
+                <CardTitle>Connection Settings</CardTitle>
                 <CardDescription>
-                  Manage your connection to the OPAL AI server
+                  Manage your connection to the AI server
                 </CardDescription>
               </CardHeader>
               <CardContent>

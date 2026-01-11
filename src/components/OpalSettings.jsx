@@ -12,6 +12,7 @@ import { getSelectedModel, setSelectedModel as saveSelectedModel } from '@/lib/m
 import opal from "@/lib/simple-opal-client";
 import authService from "@/lib/auth-service";
 import JournalExport from "./JournalExport";
+import JournalImport from "./JournalImport";
 
 export default function OpalSettings({ isOpen, onClose }) {
   const [token, setToken] = useState('');
@@ -276,13 +277,13 @@ export default function OpalSettings({ isOpen, onClose }) {
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            OPAL Connection Settings
+            Connection Settings
             {onClose && (
               <Button variant="ghost" size="sm" onClick={onClose}>×</Button>
             )}
           </CardTitle>
           <CardDescription>
-            Manage your connection to the OPAL AI server
+            Manage your connection to the AI server
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -523,6 +524,9 @@ export default function OpalSettings({ isOpen, onClose }) {
       
       {/* Journal Export Card */}
       <JournalExport className="w-full mt-6" />
+      
+      {/* Journal Import Card */}
+      <JournalImport className="w-full mt-6" />
     </div>
   );
 }

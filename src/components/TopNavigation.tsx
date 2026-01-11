@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Button } from '@/components/ui/button';
@@ -17,14 +15,8 @@ import {
   Database,
   Settings,
   User,
-  Save,
-  Sparkles,
   Wifi,
-  WifiOff,
-  MoreVertical,
-  LogOut,
-  Moon,
-  Sun
+  WifiOff
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import UserProfile from './UserProfile';
@@ -77,63 +69,14 @@ const TopNavigation = () => {
               </NavigationMenuLink>
             </NavigationMenuItem>
 
-            {/* Journal Menu with Dropdown Actions */}
             <NavigationMenuItem>
-              <NavigationMenuTrigger 
-                className={cn("h-9 bg-transparent", isJournalActive && "bg-accent text-accent-foreground")}
+              <NavigationMenuLink
+                className={cn(navigationMenuTriggerStyle(), "cursor-pointer h-9 bg-transparent", isJournalActive && "bg-accent text-accent-foreground")}
                 onClick={() => navigate('/journal')}
               >
                 <BookOpen className="w-4 h-4 mr-2" />
                 Journal
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid gap-3 p-4 w-[250px] bg-popover text-popover-foreground rounded-md border border-border shadow-md">
-                   <li className="row-span-3">
-                    <NavigationMenuLink asChild>
-                      <a
-                        className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-4 no-underline outline-none focus:shadow-md cursor-pointer"
-                        onClick={() => navigate('/journal')}
-                      >
-                        <BookOpen className="h-6 w-6" />
-                        <div className="mb-2 mt-4 text-lg font-medium">
-                          Journal
-                        </div>
-                        <p className="text-sm leading-tight text-muted-foreground">
-                          Write freely, capture thoughts, and reflect on your journey.
-                        </p>
-                      </a>
-                    </NavigationMenuLink>
-                  </li>
-                  <li>
-                     <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">Actions</div>
-                     <button
-                        onClick={(e) => { e.stopPropagation(); dispatchAction(TRIGGER_SAVE_ENTRY); }}
-                        className="w-full flex items-center rounded-md p-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                     >
-                       <Save className="w-4 h-4 mr-2" />
-                       Save Entry
-                     </button>
-                  </li>
-                  <li>
-                     <button
-                        onClick={(e) => { e.stopPropagation(); dispatchAction(TRIGGER_SAVE_TO_CORE); }}
-                        className="w-full flex items-center rounded-md p-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                     >
-                       <Database className="w-4 h-4 mr-2" />
-                       Save to Core
-                     </button>
-                  </li>
-                  <li>
-                     <button
-                        onClick={(e) => { e.stopPropagation(); dispatchAction(TRIGGER_AI_FEEDBACK); }}
-                        className="w-full flex items-center rounded-md p-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                     >
-                       <Sparkles className="w-4 h-4 mr-2" />
-                       AI Insights
-                     </button>
-                  </li>
-                </ul>
-              </NavigationMenuContent>
+              </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>

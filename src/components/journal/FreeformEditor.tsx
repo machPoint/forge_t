@@ -410,10 +410,10 @@ const FreeformEditor: React.FC<FreeformEditorProps> = ({
         />
       </CardContent>
       
-      <CardFooter className="flex justify-end border-t border-app-border-primary pt-4 space-x-2">
-        <Button variant="outline" onClick={handleSave}>Save</Button>
-        <Button variant="outline" onClick={saveToMemory}>Save to Core</Button>
-        <Button onClick={generateFeedback}>AI Feedback</Button>
+      <CardFooter className="flex justify-end border-t border-app-border-primary py-2 space-x-2">
+        <Button variant="outline" size="sm" onClick={handleSave}>Save</Button>
+        <Button variant="outline" size="sm" onClick={saveToMemory}>Save to Core</Button>
+        <Button variant="outline" size="sm" className="bg-muted hover:bg-muted/80" onClick={generateFeedback}>AI Feedback</Button>
       </CardFooter>
     </Card>
   );
