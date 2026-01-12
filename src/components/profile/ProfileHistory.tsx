@@ -45,7 +45,7 @@ const logger = {
   debug: (message: string, data?: unknown) => {
     console.debug(`[ProfileHistory] ${message}`, data || '');
   },
-  info: (message: string, data?: string) => {
+  info: (message: string, data?: unknown) => {
     console.info(`[ProfileHistory] ${message}`, data || '');
   },
   warn: (message: string, data?: unknown) => {

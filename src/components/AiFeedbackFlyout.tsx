@@ -6,14 +6,27 @@ import {
   SheetTitle, 
   SheetTrigger 
 } from "@/components/ui/sheet";
-import { Brain, Heart, Target, CircleHelp } from "lucide-react";
+import { Brain, Heart, Target, CircleHelp, X, Sparkles, Lightbulb, Compass, Shield, Star, Flame, Zap, BookOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPersonaById } from "@/lib/aiPersonas";
 import { JournalEntry } from "@/hooks/useJournal";
 
 const personaIcons: { [key: string]: React.ReactNode } = {
-  jungian: <Brain className="h-5 w-5" />,
-  cbt: <CircleHelp className="h-5 w-5" />,
+  brain: <Brain className="h-5 w-5" />,
+  heart: <Heart className="h-5 w-5" />,
+  target: <Target className="h-5 w-5" />,
+  psychology: <CircleHelp className="h-5 w-5" />,
+  sparkles: <Sparkles className="h-5 w-5" />,
+  lightbulb: <Lightbulb className="h-5 w-5" />,
+  compass: <Compass className="h-5 w-5" />,
+  shield: <Shield className="h-5 w-5" />,
+  star: <Star className="h-5 w-5" />,
+  flame: <Flame className="h-5 w-5" />,
+  zap: <Zap className="h-5 w-5" />,
+  bookopen: <BookOpen className="h-5 w-5" />,
+  // Legacy mappings for backward compatibility
+  jungian: <CircleHelp className="h-5 w-5" />,
+  cbt: <Brain className="h-5 w-5" />,
   supportive: <Heart className="h-5 w-5" />,
   stern: <Target className="h-5 w-5" />,
 };

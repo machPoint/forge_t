@@ -33,6 +33,7 @@ export default function OpalSettings({ isOpen, onClose }) {
   const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiKeySaving, setApiKeySaving] = useState(false);
+  const [apiKeyLoadStatus, setApiKeyLoadStatus] = useState('loading');
   
   // AI Model selection state
   const [selectedModel, setSelectedModel] = useState(() => {
@@ -57,18 +58,75 @@ export default function OpalSettings({ isOpen, onClose }) {
       }
     }
     
-    // Load saved OpenAI API key from localStorage
-    const savedApiKey = localStorage.getItem('openai_api_key');
-    if (savedApiKey) {
-      setOpenaiApiKey(savedApiKey);
-    }
+    // Load saved OpenAI API key - first try Tauri persistent storage, then localStorage
+    const loadApiKey = async () => {
+      console.log('[OpalSettings] Loading API key on startup...');
+      let savedApiKey = null;
+      
+      // Try loading from Tauri persistent storage first
+      if (window.__TAURI__) {
+        console.log('[OpalSettings] Tauri detected, loading from persistent storage');
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          savedApiKey = await invoke('load_openai_api_key');
+          if (savedApiKey) {
+            console.log('[OpalSettings] ✅ Loaded API key from Tauri persistent storage:', savedApiKey.substring(0, 10) + '...');
+            // Also sync to localStorage
+            localStorage.setItem('openai_api_key', savedApiKey);
+          } else {
+            console.log('[OpalSettings] No API key found in Tauri persistent storage');
+          }
+        } catch (e) {
+          console.error('[OpalSettings] Error loading API key from Tauri:', e);
+        }
+      } else {
+        console.log('[OpalSettings] Not running in Tauri, skipping persistent storage');
+      }
+      
+      // Fallback to localStorage
+      if (!savedApiKey) {
+        savedApiKey = localStorage.getItem('openai_api_key');
+        if (savedApiKey) {
+          console.log('[OpalSettings] Loaded API key from localStorage:', savedApiKey.substring(0, 10) + '...');
+        } else {
+          console.log('[OpalSettings] No API key found in localStorage');
+        }
+      }
+      
+      if (savedApiKey) {
+        console.log('[OpalSettings] Setting API key in state');
+        setOpenaiApiKey(savedApiKey);
+        setApiKeyLoadStatus('loaded');
+      } else {
+        console.warn('[OpalSettings] ⚠️ No API key found in any storage');
+        setApiKeyLoadStatus('not-found');
+      }
+    };
+    
+    loadApiKey();
 
     // Listen for OPAL events
-    const handleStatusChange = (newStatus) => {
+    const handleStatusChange = async (newStatus) => {
+      console.log('[OpalSettings] OPAL status changed to:', newStatus);
       setStatus(newStatus);
       if (newStatus === 'ready') {
         setIsConnecting(false);
         setError(null);
+        
+        // When OPAL becomes ready, send the saved API key if we have one
+        const savedKey = localStorage.getItem('openai_api_key');
+        console.log('[OpalSettings] OPAL is ready, checking for saved API key...');
+        if (savedKey) {
+          console.log('[OpalSettings] ✅ Found saved API key, sending to OPAL server:', savedKey.substring(0, 10) + '...');
+          try {
+            await opal.callTool('update_openai_key', { apiKey: savedKey });
+            console.log('[OpalSettings] ✅ API key sent to OPAL server successfully');
+          } catch (err) {
+            console.error('[OpalSettings] ❌ Failed to send API key to OPAL server:', err);
+          }
+        } else {
+          console.warn('[OpalSettings] ⚠️ No saved API key found in localStorage when OPAL became ready');
+        }
       }
     };
 
@@ -143,10 +201,26 @@ export default function OpalSettings({ isOpen, onClose }) {
     
     setApiKeySaving(true);
     try {
-      // Save to localStorage
+      // Save to localStorage for frontend use
       localStorage.setItem('openai_api_key', openaiApiKey.trim());
       
-      // Send to OPAL server to update environment
+      // Save to Tauri persistent storage for backend use on restart
+      if (window.__TAURI__) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const result = await invoke('save_openai_api_key', { apiKey: openaiApiKey.trim() });
+          console.log('✅ API key saved to Tauri persistent storage:', result);
+          alert('API key saved successfully!\n\n' + result + '\n\nThe key will now persist across app restarts.');
+        } catch (err) {
+          console.error('❌ Failed to save API key to Tauri storage:', err);
+          alert('Failed to save API key to persistent storage:\n\n' + err);
+          throw new Error('Failed to save to persistent storage: ' + err);
+        }
+      } else {
+        console.warn('⚠️ Not running in Tauri, skipping persistent storage save');
+      }
+      
+      // Send to OPAL server to update environment for current session
       await opal.callTool('update_openai_key', { apiKey: openaiApiKey.trim() });
       
       setOpenaiError(null);
@@ -424,9 +498,8 @@ export default function OpalSettings({ isOpen, onClose }) {
             </Badge>
           </div>
 
-          {/* AI Model Selection */}
-          {openaiStatus === 'connected' && (
-            <div className="space-y-3">
+          {/* AI Model Selection - Always show, not just when connected */}
+          <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-medium">AI Model:</span>
                 <div className="flex items-center gap-2">
@@ -448,8 +521,10 @@ export default function OpalSettings({ isOpen, onClose }) {
                         ))
                       ) : (
                         <>
-                          <SelectItem value="gpt-4o-2024-08-06">gpt-4o-2024-08-06</SelectItem>
-                          <SelectItem value="gpt-4o-mini-2024-07-18">gpt-4o-mini-2024-07-18</SelectItem>
+                          <SelectItem value="gpt-4o">gpt-4o</SelectItem>
+                          <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
+                          <SelectItem value="gpt-4.1">gpt-4.1</SelectItem>
+                          <SelectItem value="gpt-4.1-mini">gpt-4.1-mini</SelectItem>
                         </>
                       )}
                     </SelectContent>
@@ -478,7 +553,6 @@ export default function OpalSettings({ isOpen, onClose }) {
                 Models are fetched dynamically from OpenAI API. Changes take effect immediately.
               </div>
             </div>
-          )}
 
           {/* Error Display */}
           {openaiError && (

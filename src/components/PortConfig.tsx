@@ -29,13 +29,18 @@ const PortConfig: React.FC<PortConfigProps> = ({ onPortChange, className = '' })
   const [isTesting, setIsTesting] = useState(false);
 
   useEffect(() => {
-    setCurrentPort(opalConfig.getPort());
+    opalConfig.getPort().then(port => setCurrentPort(port));
   }, []);
 
-  const availablePorts = opalConfig.getAvailablePorts();
+  const availablePorts = [3000, 3001, 3002, 3003, 3004];
 
   const testPort = async (port: number): Promise<boolean> => {
-    return await opalConfig.testPort(port);
+    try {
+      const response = await fetch(`http://localhost:${port}/api/health`, { method: 'GET' });
+      return response.ok;
+    } catch {
+      return false;
+    }
   };
 
   const testAllPorts = async () => {

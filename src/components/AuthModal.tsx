@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -29,6 +30,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
     confirmPassword: '',
   });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Load remember me preference on mount
+  useEffect(() => {
+    const savedPreference = localStorage.getItem('remember-login');
+    if (savedPreference !== null) {
+      setRememberMe(savedPreference === 'true');
+    }
+  }, []);
 
   if (!isOpen) return null;
 
@@ -84,6 +93,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
     if (!validateForm(false)) return;
 
     try {
+      // Save remember me preference
+      localStorage.setItem('remember-login', rememberMe.toString());
+      
       const credentials: LoginCredentials = {
         username: formData.username,
         password: formData.password,
@@ -202,6 +214,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
                 <form onSubmit={handleLogin} className="space-y-4">
                   {renderInput('username', 'Username')}
                   {renderInput('password', 'Password', 'password')}
+
+                  <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded bg-gray-800 border-gray-600 text-[#304c62] focus:ring-[#304c62] focus:ring-offset-0"
+                    />
+                    <span>Remember me (skip login on startup)</span>
+                  </label>
+                  <p className="text-xs text-gray-500">
+                    {rememberMe 
+                      ? 'Your session will persist across app restarts. Recommended for personal computers.'
+                      : 'You will need to login each time you start the app. Recommended for shared computers.'}
+                  </p>
 
                   <Button
                     type="submit"

@@ -98,10 +98,20 @@ class TokenManager {
     instance._token = token;
     instance._tokenType = TokenManager._detectTokenType(token);
 
+    // Check remember me preference
+    const rememberMe = localStorage.getItem('remember-login') !== 'false';
+
     // Sync to all storage locations
     if (token) {
-      localStorage.setItem('opal-token', token);
+      // Always store in sessionStorage (cleared on app close)
       sessionStorage.setItem('opal-token', token);
+      
+      // Only store in localStorage if remember me is enabled
+      if (rememberMe) {
+        localStorage.setItem('opal-token', token);
+      } else {
+        localStorage.removeItem('opal-token');
+      }
       
       // Update authService if available
       if (window.authService && typeof window.authService.setToken === 'function') {

@@ -566,6 +566,9 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
   
   console.log('[PromptsService] Token parameter for feedback model', validatedModel, ':', tokenParam);
   
+  // Some newer models (like gpt-5) don't support custom temperature
+  const supportsTemperature = !validatedModel.startsWith('gpt-5') && !validatedModel.includes('o1-') && !validatedModel.includes('o3-');
+  
   const body = {
     model: validatedModel,
     messages: [
@@ -574,7 +577,7 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
       ...(profileContext ? [{ role: 'system', content: profileContext }] : []),
       { role: 'user', content: entryContent }
     ],
-    temperature: 0.8,
+    ...(supportsTemperature ? { temperature: 0.8 } : {}),
     ...tokenParam
   };
   
@@ -833,6 +836,9 @@ async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUse
   
   console.log('[PromptsService] Token parameter for model', validatedModel, ':', tokenParam);
   
+  // Some newer models (like gpt-5) don't support custom temperature
+  const supportsTemperature = !validatedModel.startsWith('gpt-5') && !validatedModel.includes('o1-') && !validatedModel.includes('o3-');
+  
   const body = {
     model: validatedModel,
     messages: [
@@ -841,7 +847,7 @@ async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUse
       ...(profileContext ? [{ role: 'system', content: `IMPORTANT: Use this user profile information to provide highly personalized and psychologically-informed insights:\n\n${profileContext}` }] : []),
       { role: 'user', content: memoriesContext }
     ],
-    temperature: 0.6,
+    ...(supportsTemperature ? { temperature: 0.6 } : {}),
     ...tokenParam
   };
   

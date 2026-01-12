@@ -20,7 +20,8 @@ import {
   Key, 
   Calendar,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from "lucide-react";
 import authService from '@/lib/auth-service';
 import Spinner from './ui/spinner';
@@ -28,10 +29,12 @@ import Spinner from './ui/spinner';
 interface ApiToken {
   id: string;
   name: string;
-  token: string;
+  token?: string;
   permissions: Record<string, boolean>;
   expires_at?: string;
-  created_at: string;
+  expiresAt?: string;
+  created_at?: string;
+  createdAt?: string;
 }
 
 const ApiTokenManager: React.FC = () => {

@@ -58,25 +58,35 @@ export const useChat = create<ChatState>()(
     }),
     {
       name: 'forge-chat-storage',
-      // Custom serialization to handle Date objects
-      serialize: (state) => JSON.stringify(state, (key, value) => {
-        if (value instanceof Date) {
-          return { __type: 'Date', value: value.toISOString() };
-        }
-        return value;
-      }),
-      // Custom deserialization to restore Date objects
-      deserialize: (str) => {
-        const parsed = JSON.parse(str);
-        return {
-          ...parsed,
-          messages: parsed.messages?.map((msg: ChatMessage) => ({
-            ...msg,
-            timestamp: msg.timestamp?.__type === 'Date' 
-              ? new Date(msg.timestamp.value) 
-              : new Date(msg.timestamp)
-          })) || []
-        };
+      // Custom storage to handle Date objects
+      storage: {
+        getItem: (name: string) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          const parsed = JSON.parse(str);
+          return {
+            ...parsed,
+            state: {
+              ...parsed.state,
+              messages: parsed.state?.messages?.map((msg: any) => ({
+                ...msg,
+                timestamp: msg.timestamp?.__type === 'Date' 
+                  ? new Date(msg.timestamp.value) 
+                  : new Date(msg.timestamp)
+              })) || []
+            }
+          };
+        },
+        setItem: (name: string, value: any) => {
+          const serialized = JSON.stringify(value, (key, val) => {
+            if (val instanceof Date) {
+              return { __type: 'Date', value: val.toISOString() };
+            }
+            return val;
+          });
+          localStorage.setItem(name, serialized);
+        },
+        removeItem: (name: string) => localStorage.removeItem(name)
       }
     }
   )

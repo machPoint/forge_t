@@ -20,6 +20,8 @@ interface JournalMemory {
   source: string;
   journal_id?: string;
   module_id?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Helper function to calculate content similarity using Levenshtein distance

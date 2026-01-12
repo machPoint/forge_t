@@ -40,9 +40,16 @@ import {
   LogOut,
   AlertTriangle,
   RefreshCw,
-  Loader2
+  Loader2,
+  Sparkles,
+  Lightbulb,
+  Compass,
+  Shield,
+  Star,
+  Flame,
+  Zap,
+  BookOpen
 } from "lucide-react";
-import JournalExport from "@/components/JournalExport";
 import UpdateManager from "@/components/UpdateManager";
 import ThemeCustomizer from "@/components/ThemeCustomizer";
 import { 
@@ -70,6 +77,14 @@ const iconOptions = [
   { id: "heart", label: "Heart", icon: <Heart className="h-4 w-4" /> },
   { id: "target", label: "Target", icon: <Target className="h-4 w-4" /> },
   { id: "psychology", label: "Psychology", icon: <CircleHelp className="h-4 w-4" /> },
+  { id: "sparkles", label: "Sparkles", icon: <Sparkles className="h-4 w-4" /> },
+  { id: "lightbulb", label: "Lightbulb", icon: <Lightbulb className="h-4 w-4" /> },
+  { id: "compass", label: "Compass", icon: <Compass className="h-4 w-4" /> },
+  { id: "shield", label: "Shield", icon: <Shield className="h-4 w-4" /> },
+  { id: "star", label: "Star", icon: <Star className="h-4 w-4" /> },
+  { id: "flame", label: "Flame", icon: <Flame className="h-4 w-4" /> },
+  { id: "zap", label: "Zap", icon: <Zap className="h-4 w-4" /> },
+  { id: "bookopen", label: "Book", icon: <BookOpen className="h-4 w-4" /> },
 ];
 
 const AdminPage = () => {
@@ -574,65 +589,6 @@ const AdminPage = () => {
                   </div>
                 </div>
 
-                {/* AI Model Selection Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-app-text-primary">AI Model Configuration</h3>
-                  <div className="bg-app-bg-elevated p-4 rounded-md space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">OpenAI Model</p>
-                        <p className="text-sm text-app-text-secondary">Select which AI model to use for therapeutic responses</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Select 
-                          value={selectedModel} 
-                          onValueChange={setSelectedModel}
-                        >
-                          <SelectTrigger className="w-56">
-                            <SelectValue placeholder="Select model" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-64 overflow-y-auto">
-                            {loadingModels ? (
-                              <div className="flex items-center justify-center p-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span className="ml-2 text-sm">Loading models...</span>
-                              </div>
-                            ) : availableModels.length > 0 ? (
-                              availableModels.map((model) => (
-                                <SelectItem key={model.id} value={model.id}>
-                                  <span className="font-mono text-sm">{model.id}</span>
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <>
-                                <SelectItem value="gpt-4o">gpt-4o</SelectItem>
-                                <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
-                              </>
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={fetchAvailableModels}
-                          disabled={loadingModels}
-                          title="Refresh models list"
-                        >
-                          <RefreshCw className={`h-4 w-4 ${loadingModels ? 'animate-spin' : ''}`} />
-                        </Button>
-                      </div>
-                    </div>
-                    {availableModels.length > 0 && (
-                      <div className="text-xs text-app-text-secondary">
-                        {availableModels.length} GPT models available from OpenAI API
-                      </div>
-                    )}
-                    <div className="text-xs text-app-text-tertiary">
-                      Models are fetched dynamically. Changes take effect immediately for new AI interactions.
-                    </div>
-                  </div>
-                </div>
-
                 {/* Account Management Section */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-app-text-primary">Account Management</h3>
@@ -655,9 +611,6 @@ const AdminPage = () => {
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Journal Export Card */}
-            <JournalExport />
             
             {/* Update Manager Card */}
             <UpdateManager />

@@ -22,7 +22,7 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
 ];
 
 export const getSelectedModel = (): string => {
-  const model = localStorage.getItem('selectedAIModel') || 'gpt-4o';
+  const model = localStorage.getItem('selectedAIModel') || 'gpt-4o-mini';
   console.log('[ModelConfig] Getting selected model:', model);
   return model;
 };

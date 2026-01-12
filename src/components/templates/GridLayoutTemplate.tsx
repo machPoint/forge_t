@@ -114,10 +114,10 @@ interface GridItemTemplateProps {
   
   // Responsive spans
   responsive?: {
-    sm?: { colSpan?: typeof colSpan; rowSpan?: typeof rowSpan };
-    md?: { colSpan?: typeof colSpan; rowSpan?: typeof rowSpan };
-    lg?: { colSpan?: typeof colSpan; rowSpan?: typeof rowSpan };
-    xl?: { colSpan?: typeof colSpan; rowSpan?: typeof rowSpan };
+    sm?: { colSpan?: 1 | 2 | 3 | 4 | 5 | 6 | 12 | 'full'; rowSpan?: 1 | 2 | 3 | 4 | 5 | 6 | 'full' };
+    md?: { colSpan?: 1 | 2 | 3 | 4 | 5 | 6 | 12 | 'full'; rowSpan?: 1 | 2 | 3 | 4 | 5 | 6 | 'full' };
+    lg?: { colSpan?: 1 | 2 | 3 | 4 | 5 | 6 | 12 | 'full'; rowSpan?: 1 | 2 | 3 | 4 | 5 | 6 | 'full' };
+    xl?: { colSpan?: 1 | 2 | 3 | 4 | 5 | 6 | 12 | 'full'; rowSpan?: 1 | 2 | 3 | 4 | 5 | 6 | 'full' };
   };
   
   // Styling

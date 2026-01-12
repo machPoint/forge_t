@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useJournal } from "@/hooks/useJournal";
 import { getPersonas } from "@/lib/aiPersonas"; 
-import { Check, ChevronsUpDown, Brain, Heart, Target, CircleHelp } from "lucide-react";
+import { Check, ChevronsUpDown, Brain, Heart, Target, CircleHelp, Sparkles, Lightbulb, Compass, Shield, Star, Flame, Zap, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,8 +19,21 @@ import {
 } from "@/components/ui/popover";
 
 const personaIcons: { [key: string]: React.ReactNode } = {
-  jungian: <Brain className="mr-2 h-4 w-4" />,
-  cbt: <CircleHelp className="mr-2 h-4 w-4" />,
+  brain: <Brain className="mr-2 h-4 w-4" />,
+  heart: <Heart className="mr-2 h-4 w-4" />,
+  target: <Target className="mr-2 h-4 w-4" />,
+  psychology: <CircleHelp className="mr-2 h-4 w-4" />,
+  sparkles: <Sparkles className="mr-2 h-4 w-4" />,
+  lightbulb: <Lightbulb className="mr-2 h-4 w-4" />,
+  compass: <Compass className="mr-2 h-4 w-4" />,
+  shield: <Shield className="mr-2 h-4 w-4" />,
+  star: <Star className="mr-2 h-4 w-4" />,
+  flame: <Flame className="mr-2 h-4 w-4" />,
+  zap: <Zap className="mr-2 h-4 w-4" />,
+  bookopen: <BookOpen className="mr-2 h-4 w-4" />,
+  // Legacy mappings for backward compatibility
+  jungian: <CircleHelp className="mr-2 h-4 w-4" />,
+  cbt: <Brain className="mr-2 h-4 w-4" />,
   supportive: <Heart className="mr-2 h-4 w-4" />,
   stern: <Target className="mr-2 h-4 w-4" />,
 };

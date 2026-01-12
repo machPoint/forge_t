@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useJournal } from "@/hooks/useJournal";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clock, PlusCircle, Save, Database, MessageSquare, Pin } from 'lucide-react';
 import EntryCard from "./EntryCard";
 import { toast } from "sonner";
@@ -53,10 +54,10 @@ const JournalSidebar: React.FC = () => {
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const dayNames = ["S", "M", "T", "W", "T", "F", "S"];
 
-  // Filter entries based on selected date, or show recent entries if no date selected
+  // Filter entries based on selected date, or show all entries if no date selected
   const filteredEntries = selectedDate 
     ? entriesByDate[selectedDate.toDateString()] || []
-    : entries.slice(0, 5);
+    : entries;
 
   const recentEntries = filteredEntries;
 
@@ -237,8 +238,8 @@ const JournalSidebar: React.FC = () => {
       </div>
 
       {/* Recent Entries */}
-      <div className="flex-1 min-h-0 px-4 pb-4 flex flex-col">
-        <div className="flex items-center justify-between mb-2">
+      <div className="flex-1 min-h-0 px-4 pb-4 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between mb-2 flex-shrink-0">
           <div className="flex items-center">
             <Clock className="w-4 h-4 mr-2 text-muted-foreground" />
             <h2 className="text-sm font-medium text-muted-foreground">
@@ -255,36 +256,38 @@ const JournalSidebar: React.FC = () => {
           )}
         </div>
         
-        <div className="space-y-1 flex-1 min-h-0 overflow-y-auto">
-          {recentEntries.filter(entry => !entry.pinned).map(entry => (
-            <div 
-              key={entry.id} 
-              className={`p-2 hover:bg-accent cursor-pointer ${
-                selectedEntry?.id === entry.id ? 'bg-accent text-accent-foreground' : ''
-              }`} 
-              style={{ borderRadius: 0 }}
-              onClick={() => handleEntryClick(entry)}
-            >
-              <div className="flex items-start">
-                <div className="w-2 h-2 bg-foreground/20 rounded-full mt-1 mr-3 flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xs font-medium text-foreground truncate">{entry.title}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(entry.createdAt).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {(entry.content || '').replace(/<[^>]*>/g, '').substring(0, 60)}...
-                  </p>
+        <ScrollArea className="flex-1">
+          <div className="space-y-1 pr-2">
+            {recentEntries.filter(entry => !entry.pinned).map(entry => (
+              <div 
+                key={entry.id} 
+                className={`p-2 hover:bg-accent cursor-pointer ${
+                  selectedEntry?.id === entry.id ? 'bg-accent text-accent-foreground' : ''
+                }`} 
+                style={{ borderRadius: 0 }}
+                onClick={() => handleEntryClick(entry)}
+              >
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-foreground/20 rounded-full mt-1 mr-3 flex-shrink-0"></div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xs font-medium text-foreground truncate">{entry.title}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(entry.createdAt).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {(entry.content || '').replace(/<[^>]*>/g, '').substring(0, 60)}...
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
 
       {/* Calendar - at bottom */}

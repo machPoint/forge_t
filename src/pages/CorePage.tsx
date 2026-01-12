@@ -243,7 +243,7 @@ const CorePage: React.FC = () => {
       <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Sidebar */}
         {!sidebarCollapsed && (
-          <div className="bg-background border-r border-border min-w-[220px] max-w-[320px] w-[25%] flex-shrink-0 transition-all duration-200">
+          <div className="bg-background border-r border-border min-w-[220px] max-w-[320px] w-[25%] flex-shrink-0 transition-all duration-200 h-full overflow-hidden">
             <CoreSidebar 
               memories={memories}
               selectedMemoryId={selectedMemoryId}
@@ -261,20 +261,20 @@ const CorePage: React.FC = () => {
         <div className="flex-1 flex flex-col min-h-0 bg-background">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="border-b border-border px-6 py-3 flex items-center justify-between bg-background">
-              <TabsList className="bg-muted/50 border border-border">
-                <TabsTrigger value="viewer" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
+              <TabsList className="bg-zinc-800 border border-zinc-700">
+                <TabsTrigger value="viewer" className="flex items-center gap-2 text-zinc-400 data-[state=active]:bg-zinc-700 data-[state=active]:text-white">
                   <Eye className="w-4 h-4" />
                   Viewer
                 </TabsTrigger>
-                <TabsTrigger value="insights" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
+                <TabsTrigger value="insights" className="flex items-center gap-2 text-zinc-400 data-[state=active]:bg-zinc-700 data-[state=active]:text-white">
                   <BarChart3 className="w-4 h-4" />
                   Insights
                 </TabsTrigger>
-                <TabsTrigger value="visualizations" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
+                <TabsTrigger value="visualizations" className="flex items-center gap-2 text-zinc-400 data-[state=active]:bg-zinc-700 data-[state=active]:text-white">
                   <ChartBar className="w-4 h-4" />
                   Analytics
                 </TabsTrigger>
-                <TabsTrigger value="chat" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
+                <TabsTrigger value="chat" className="flex items-center gap-2 text-zinc-400 data-[state=active]:bg-zinc-700 data-[state=active]:text-white">
                   <MessageCircle className="w-4 h-4" />
                   Chat
                 </TabsTrigger>
@@ -284,7 +284,7 @@ const CorePage: React.FC = () => {
                 <Button
                   onClick={() => setShowAddMemory(true)}
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="bg-zinc-700 hover:bg-zinc-600 text-white border border-zinc-600"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Core Entry

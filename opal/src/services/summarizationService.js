@@ -37,12 +37,15 @@ async function summarizeContent(content, type = 'headline') {
         { role: 'user', content: `${prompt}\n\n${content}` }
       ];
       
+      // Some newer models (like gpt-5) don't support custom temperature
+      const supportsTemperature = !OPENAI_MODEL.startsWith('gpt-5') && !OPENAI_MODEL.includes('o1-') && !OPENAI_MODEL.includes('o3-');
+      
       const response = await axios.post(
         OPENAI_API_URL,
         {
           model: OPENAI_MODEL,
           messages,
-          temperature: 0.3,
+          ...(supportsTemperature ? { temperature: 0.3 } : {}),
           max_tokens: type === 'headline' ? 32 : (type === 'paragraph' ? 128 : 512)
         },
         {

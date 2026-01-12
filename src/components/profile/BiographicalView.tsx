@@ -13,7 +13,7 @@ const BiographicalView: React.FC<BiographicalViewProps> = ({ data, onEditClick }
   console.log('[BiographicalView] Received data:', data);
   
   // Helper function to handle both camelCase and snake_case property names
-  const getProperty = (obj: Record<string, unknown>, snakeKey: string, camelKey?: string) => {
+  const getProperty = (obj: Record<string, any>, snakeKey: string, camelKey?: string): any => {
     // Try snake_case first, then camelCase if provided
     const value = obj[snakeKey] !== undefined ? obj[snakeKey] : 
                  (camelKey && obj[camelKey] !== undefined ? obj[camelKey] : undefined);

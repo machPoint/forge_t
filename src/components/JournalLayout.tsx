@@ -100,7 +100,7 @@ const JournalLayout: React.FC = () => {
       <div className="flex-1 min-h-0 flex bg-app-bg-primary">
         {/* Sidebar */}
         {!leftPaneCollapsed && (
-          <div className="bg-app-bg-primary border-r border-app-border-divider min-w-[220px] max-w-[320px] w-[20%] flex-shrink-0 transition-all duration-200 relative">
+          <div className="bg-app-bg-primary border-r border-app-border-divider min-w-[220px] max-w-[320px] w-[20%] flex-shrink-0 transition-all duration-200 relative h-full overflow-hidden">
             {currentMode === "guided" ? <GuidedStepsSidebar /> : <JournalSidebar />}
             {/* Panel toggle button - inside sidebar at bottom-right */}
             <Button 

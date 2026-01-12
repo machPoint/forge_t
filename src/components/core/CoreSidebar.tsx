@@ -144,7 +144,7 @@ const CoreSidebar: React.FC<CoreSidebarProps> = ({
             placeholder="Search core entries..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground placeholder:text-muted-foreground focus-visible:ring-sidebar-ring"
+            className="pl-10 bg-zinc-800 border-zinc-700 text-white placeholder:text-gray-500 focus-visible:ring-zinc-600"
           />
         </div>
       </div>

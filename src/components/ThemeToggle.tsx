@@ -6,7 +6,7 @@ import { useTheme } from "./ThemeProvider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
+  const { currentTheme, toggleLightDark } = useTheme();
 
   return (
     <Tooltip>
@@ -14,10 +14,10 @@ export function ThemeToggle() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={toggleTheme}
+          onClick={toggleLightDark}
           className="h-8 w-8"
         >
-          {theme === "light" ? (
+          {!currentTheme.isDark ? (
             <Moon size={16} className="text-gray-700" />
           ) : (
             <Sun size={16} className="text-gray-300" />
@@ -26,7 +26,7 @@ export function ThemeToggle() {
         </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">
-        <p>Toggle {theme === "light" ? "dark" : "light"} mode</p>
+        <p>Toggle {!currentTheme.isDark ? "dark" : "light"} mode</p>
       </TooltipContent>
     </Tooltip>
   );

@@ -55,10 +55,7 @@ const RibbonMenu = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="w-full border-b" style={{ 
-      backgroundColor: theme.styles.primaryBg,
-      borderColor: theme.styles.border 
-    }}>
+    <div className="w-full border-b border-border bg-background">
       {/* Main Ribbon Bar */}
       <div className="flex items-center justify-between px-4 py-2 text-sm">
         {/* Left Section - Navigation */}

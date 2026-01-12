@@ -216,7 +216,9 @@ export const useJournal = create<JournalState>((set, get) => ({
           content: entry.content || "",
           moduleId: entry.moduleId,
           moduleStep: entry.moduleStep,
-          tags: entry.tags
+          tags: entry.tags,
+          createdAt: entry.createdAt, // Include original date for imports
+          updatedAt: entry.updatedAt  // Include original updated date if provided
         })
       });
       

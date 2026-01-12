@@ -26,7 +26,6 @@ import { useModules } from "@/hooks/useModules";
 import PageTemplate from "@/components/templates/PageTemplate";
 import CardTemplate from "@/components/templates/CardTemplate";
 import GridLayoutTemplate, { GridItemTemplate } from "@/components/templates/GridLayoutTemplate";
-import ThemeSelector from "@/components/ui/ThemeSelector";
 
 // Memory interface for type safety
 interface Memory {
@@ -192,7 +191,6 @@ const HomePage: React.FC = () => {
   // Header actions for the page
   const headerActions = (
     <div className="flex items-center gap-3">
-      <ThemeSelector variant="dropdown" />
       <Button onClick={handleNewEntry} className="flex items-center gap-2">
         <PlusCircle className="w-4 h-4" />
         New Entry

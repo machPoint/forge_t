@@ -228,7 +228,7 @@ const ProfilePage: React.FC = () => {
         }
         
         // Similarly normalize personality profile fields
-        const normalizedPersonalityProfile = {};
+        const normalizedPersonalityProfile: Record<string, unknown> = {};
         if (personalityProfile) {
           // Handle big_five section - Debug version with better logs
           const hasBigFive = Boolean(personalityProfile.big_five || personalityProfile.bigFive);

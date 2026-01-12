@@ -5,6 +5,9 @@ use std::fs;
 use std::time::Duration;
 use tauri::{Manager, State};
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
 // Global state to hold the OPAL server process
 struct AppState {
     opal_process: Mutex<Option<Child>>,
@@ -44,6 +47,55 @@ fn get_journal_api_url(state: State<AppState>) -> String {
 fn get_notes_api_url(state: State<AppState>) -> String {
     let port = *state.opal_port.lock().unwrap();
     format!("http://localhost:{}/notes", port)
+}
+
+#[tauri::command]
+fn save_openai_api_key(app: tauri::AppHandle, api_key: String) -> Result<String, String> {
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    
+    let config_file = app_data_dir.join("openai_config.json");
+    
+    // Create directory if it doesn't exist
+    fs::create_dir_all(&app_data_dir)
+        .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    
+    // Save the API key as JSON
+    let config = serde_json::json!({
+        "api_key": api_key
+    });
+    
+    fs::write(&config_file, config.to_string())
+        .map_err(|e| format!("Failed to save API key: {}", e))?;
+    
+    let success_msg = format!("✅ Saved OpenAI API key to: {:?}", config_file);
+    println!("{}", success_msg);
+    Ok(success_msg)
+}
+
+#[tauri::command]
+fn load_openai_api_key(app: tauri::AppHandle) -> Result<String, String> {
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    
+    let config_file = app_data_dir.join("openai_config.json");
+    
+    if !config_file.exists() {
+        return Ok(String::new());
+    }
+    
+    let content = fs::read_to_string(&config_file)
+        .map_err(|e| format!("Failed to read config file: {}", e))?;
+    
+    let config: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse config file: {}", e))?;
+    
+    let api_key = config.get("api_key")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    
+    Ok(api_key)
 }
 
 #[tauri::command]
@@ -93,12 +145,41 @@ fn ensure_opal_directories(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(persistent_db_path)
 }
 
-// Load environment variables from .env file
-fn load_env_file(app: &tauri::AppHandle) -> Result<String, String> {
+// Load OpenAI API key from persistent config or .env file
+fn load_openai_key_from_config(app: &tauri::AppHandle) -> Result<String, String> {
     let app_data_dir = app.path().app_data_dir()
         .map_err(|e| format!("Failed to get app data dir: {}", e))?;
     
-    // Try multiple .env file locations
+    // First, check the persistent config file (saved via UI)
+    let config_file = app_data_dir.join("openai_config.json");
+    println!("🔍 Checking for API key at: {:?}", config_file);
+    
+    if config_file.exists() {
+        println!("✅ Config file exists, reading...");
+        if let Ok(content) = fs::read_to_string(&config_file) {
+            println!("✅ Config file read successfully, parsing JSON...");
+            if let Ok(config) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(api_key) = config.get("api_key").and_then(|v| v.as_str()) {
+                    if !api_key.is_empty() {
+                        println!("✅ Loaded OpenAI API key from persistent config: {}...", &api_key[..10.min(api_key.len())]);
+                        return Ok(api_key.to_string());
+                    } else {
+                        println!("⚠️ API key in config is empty");
+                    }
+                } else {
+                    println!("⚠️ No 'api_key' field found in config");
+                }
+            } else {
+                println!("❌ Failed to parse config JSON");
+            }
+        } else {
+            println!("❌ Failed to read config file");
+        }
+    } else {
+        println!("⚠️ Config file does not exist at: {:?}", config_file);
+    }
+    
+    // Fallback: Try multiple .env file locations
     let mut env_paths = vec![app_data_dir.join(".env")];
     
     if let Some(parent) = app_data_dir.parent() {
@@ -126,7 +207,7 @@ fn load_env_file(app: &tauri::AppHandle) -> Result<String, String> {
                             .trim_matches('\'')
                             .to_string();
                         if !key.is_empty() {
-                            println!("✅ Found OpenAI API key");
+                            println!("✅ Found OpenAI API key in .env");
                             return Ok(key);
                         }
                     }
@@ -135,7 +216,7 @@ fn load_env_file(app: &tauri::AppHandle) -> Result<String, String> {
         }
     }
     
-    println!("⚠️ No .env file found or no OPENAI_API_KEY in .env");
+    println!("⚠️ No OpenAI API key found in config or .env files");
     Ok(String::new())
 }
 
@@ -150,7 +231,7 @@ async fn spawn_opal_server(
     let persistent_db_path = ensure_opal_directories(app)?;
     
     // Load OpenAI API key
-    let openai_api_key = load_env_file(app).unwrap_or_default();
+    let openai_api_key = load_openai_key_from_config(app).unwrap_or_default();
     
     // Determine OPAL server path
     let is_dev = cfg!(debug_assertions);
@@ -184,8 +265,8 @@ async fn spawn_opal_server(
         .ok_or("Failed to get backup directory")?;
     
     // Spawn Node.js process
-    let mut child = Command::new("node")
-        .arg("src/server.js")
+    let mut cmd = Command::new("node");
+    cmd.arg("src/server.js")
         .current_dir(opal_dir)
         .env("NODE_ENV", "development")
         .env("MCP_PORT", port.to_string())
@@ -207,8 +288,13 @@ async fn spawn_opal_server(
         .env("SQLITE_THREADSAFE", "1")
         .env("SQLITE_ENABLE_FTS", "1")
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
+        .stderr(Stdio::piped());
+    
+    // Hide console window on Windows
+    #[cfg(windows)]
+    cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    
+    let mut child = cmd.spawn()
         .map_err(|e| format!("Failed to spawn OPAL server: {}", e))?;
     
     println!("✅ OPAL server process spawned");
@@ -295,6 +381,9 @@ pub fn run() {
             
             let ai_feedback = MenuItemBuilder::with_id("ai_feedback", "AI Feedback").build(handle)?;
             let settings = MenuItemBuilder::with_id("settings", "Settings").build(handle)?;
+            let devtools = MenuItemBuilder::with_id("devtools", "Developer Tools")
+                .accelerator("F12")
+                .build(handle)?;
             
             // Build submenus
             let file_menu = SubmenuBuilder::new(handle, "File")
@@ -315,6 +404,7 @@ pub fn run() {
             let tools_menu = SubmenuBuilder::new(handle, "Tools")
                 .item(&ai_feedback)
                 .item(&settings)
+                .item(&devtools)
                 .build()?;
 
             // Build main menu
@@ -341,6 +431,14 @@ pub fn run() {
                 "go_home" => {
                     if let Some(window) = app.get_webview_window("main") {
                         let _ = window.emit("menu-event", "go-home");
+                    }
+                }
+                "devtools" => {
+                    #[cfg(debug_assertions)]
+                    {
+                        if let Some(window) = app.get_webview_window("main") {
+                            window.open_devtools();
+                        }
                     }
                 }
                 // ... handle other menu events
@@ -373,7 +471,9 @@ pub fn run() {
             get_ws_url,
             get_journal_api_url,
             get_notes_api_url,
-            restart_opal_server
+            restart_opal_server,
+            save_openai_api_key,
+            load_openai_api_key
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::Destroyed = event {

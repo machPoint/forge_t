@@ -462,19 +462,26 @@ class SimpleOPALClient {
   }
 
   // Send request and wait for response
-  async sendRequest(request) {
+  async sendRequest(request, customTimeout = null) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw new Error('WebSocket connection not open');
     }
 
     console.log('[OPAL] Sending request:', JSON.stringify(request, null, 2));
 
+    // Use longer timeout for AI-related calls (2 minutes), default 30s for others
+    const isAICall = request.params?.name?.includes('ai_') || 
+                     request.params?.name?.includes('get_ai_') ||
+                     request.params?.name === 'get_ai_feedback' ||
+                     request.params?.name === 'get_ai_insights';
+    const timeoutMs = customTimeout || (isAICall ? 120000 : 30000);
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        console.error('[OPAL] Request timeout for method:', request.method);
+        console.error('[OPAL] Request timeout for method:', request.method, 'after', timeoutMs, 'ms');
         this.pendingRequests.delete(request.id);
         reject(new Error(`Request timeout for method: ${request.method}`));
-      }, 30000);
+      }, timeoutMs);
 
       this.pendingRequests.set(request.id, { resolve, reject, timeout });
       this.ws.send(JSON.stringify(request));
