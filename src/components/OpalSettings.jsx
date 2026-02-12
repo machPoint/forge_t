@@ -31,9 +31,29 @@ export default function OpalSettings({ isOpen, onClose }) {
   
   // OpenAI API key management state
   const [openaiApiKey, setOpenaiApiKey] = useState('');
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [apiKeySaving, setApiKeySaving] = useState(false);
-  const [apiKeyLoadStatus, setApiKeyLoadStatus] = useState('loading');
+  const [showOpenaiKey, setShowOpenaiKey] = useState(false);
+  const [openaiKeySaving, setOpenaiKeySaving] = useState(false);
+  const [openaiKeyLoadStatus, setOpenaiKeyLoadStatus] = useState('loading');
+  
+  // Anthropic API key management state
+  const [anthropicApiKey, setAnthropicApiKey] = useState('');
+  const [showAnthropicKey, setShowAnthropicKey] = useState(false);
+  const [anthropicKeySaving, setAnthropicKeySaving] = useState(false);
+  const [anthropicKeyLoadStatus, setAnthropicKeyLoadStatus] = useState('loading');
+  const [anthropicStatus, setAnthropicStatus] = useState('unknown');
+  const [anthropicTesting, setAnthropicTesting] = useState(false);
+  const [anthropicError, setAnthropicError] = useState(null);
+  const [anthropicModels, setAnthropicModels] = useState([
+    { id: 'claude-opus-4-6' },
+    { id: 'claude-opus-4-5-20251101' },
+    { id: 'claude-sonnet-4-5-20250929' },
+    { id: 'claude-haiku-4-5-20251001' }
+  ]);
+  
+  // AI Provider selection
+  const [selectedProvider, setSelectedProvider] = useState(() => {
+    return localStorage.getItem('ai_provider') || 'openai';
+  });
   
   // AI Model selection state
   const [selectedModel, setSelectedModel] = useState(() => {
@@ -58,52 +78,60 @@ export default function OpalSettings({ isOpen, onClose }) {
       }
     }
     
-    // Load saved OpenAI API key - first try Tauri persistent storage, then localStorage
-    const loadApiKey = async () => {
-      console.log('[OpalSettings] Loading API key on startup...');
-      let savedApiKey = null;
+    // Load saved API keys - first try Tauri persistent storage, then localStorage
+    const loadApiKeys = async () => {
+      console.log('[OpalSettings] Loading API keys on startup...');
       
-      // Try loading from Tauri persistent storage first
+      // Load OpenAI key
+      let savedOpenaiKey = null;
       if (window.__TAURI__) {
-        console.log('[OpalSettings] Tauri detected, loading from persistent storage');
         try {
           const { invoke } = await import('@tauri-apps/api/core');
-          savedApiKey = await invoke('load_openai_api_key');
-          if (savedApiKey) {
-            console.log('[OpalSettings] ✅ Loaded API key from Tauri persistent storage:', savedApiKey.substring(0, 10) + '...');
-            // Also sync to localStorage
-            localStorage.setItem('openai_api_key', savedApiKey);
-          } else {
-            console.log('[OpalSettings] No API key found in Tauri persistent storage');
+          savedOpenaiKey = await invoke('load_openai_api_key');
+          if (savedOpenaiKey) {
+            console.log('[OpalSettings] ✅ Loaded OpenAI key from Tauri');
+            localStorage.setItem('openai_api_key', savedOpenaiKey);
           }
         } catch (e) {
-          console.error('[OpalSettings] Error loading API key from Tauri:', e);
-        }
-      } else {
-        console.log('[OpalSettings] Not running in Tauri, skipping persistent storage');
-      }
-      
-      // Fallback to localStorage
-      if (!savedApiKey) {
-        savedApiKey = localStorage.getItem('openai_api_key');
-        if (savedApiKey) {
-          console.log('[OpalSettings] Loaded API key from localStorage:', savedApiKey.substring(0, 10) + '...');
-        } else {
-          console.log('[OpalSettings] No API key found in localStorage');
+          console.error('[OpalSettings] Error loading OpenAI key from Tauri:', e);
         }
       }
-      
-      if (savedApiKey) {
-        console.log('[OpalSettings] Setting API key in state');
-        setOpenaiApiKey(savedApiKey);
-        setApiKeyLoadStatus('loaded');
+      if (!savedOpenaiKey) {
+        savedOpenaiKey = localStorage.getItem('openai_api_key');
+      }
+      if (savedOpenaiKey) {
+        setOpenaiApiKey(savedOpenaiKey);
+        setOpenaiKeyLoadStatus('loaded');
       } else {
-        console.warn('[OpalSettings] ⚠️ No API key found in any storage');
-        setApiKeyLoadStatus('not-found');
+        setOpenaiKeyLoadStatus('not-found');
+      }
+      
+      // Load Anthropic key
+      let savedAnthropicKey = null;
+      if (window.__TAURI__) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          savedAnthropicKey = await invoke('load_anthropic_api_key');
+          if (savedAnthropicKey) {
+            console.log('[OpalSettings] ✅ Loaded Anthropic key from Tauri');
+            localStorage.setItem('anthropic_api_key', savedAnthropicKey);
+          }
+        } catch (e) {
+          console.error('[OpalSettings] Error loading Anthropic key from Tauri:', e);
+        }
+      }
+      if (!savedAnthropicKey) {
+        savedAnthropicKey = localStorage.getItem('anthropic_api_key');
+      }
+      if (savedAnthropicKey) {
+        setAnthropicApiKey(savedAnthropicKey);
+        setAnthropicKeyLoadStatus('loaded');
+      } else {
+        setAnthropicKeyLoadStatus('not-found');
       }
     };
     
-    loadApiKey();
+    loadApiKeys();
 
     // Listen for OPAL events
     const handleStatusChange = async (newStatus) => {
@@ -193,13 +221,13 @@ export default function OpalSettings({ isOpen, onClose }) {
   };
 
   // Save OpenAI API key
-  const saveApiKey = async () => {
+  const saveOpenAIApiKey = async () => {
     if (!openaiApiKey.trim()) {
       setOpenaiError('Please enter a valid API key');
       return;
     }
     
-    setApiKeySaving(true);
+    setOpenaiKeySaving(true);
     try {
       // Save to localStorage for frontend use
       localStorage.setItem('openai_api_key', openaiApiKey.trim());
@@ -230,7 +258,96 @@ export default function OpalSettings({ isOpen, onClose }) {
       console.error('Error saving API key:', error);
       setOpenaiError('Failed to save API key: ' + error.message);
     } finally {
-      setApiKeySaving(false);
+      setOpenaiKeySaving(false);
+    }
+  };
+
+  // Save Anthropic API key
+  const saveAnthropicApiKey = async () => {
+    if (!anthropicApiKey.trim()) {
+      setAnthropicError('Please enter a valid API key');
+      return;
+    }
+    
+    setAnthropicKeySaving(true);
+    try {
+      // Save to localStorage for frontend use
+      localStorage.setItem('anthropic_api_key', anthropicApiKey.trim());
+      
+      // Save to Tauri persistent storage for backend use on restart
+      if (window.__TAURI__) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const result = await invoke('save_anthropic_api_key', { apiKey: anthropicApiKey.trim() });
+          console.log('✅ Anthropic API key saved to Tauri persistent storage:', result);
+          alert('Anthropic API key saved successfully!\n\n' + result + '\n\nThe key will now persist across app restarts.');
+        } catch (err) {
+          console.error('❌ Failed to save Anthropic API key to Tauri storage:', err);
+          alert('Failed to save Anthropic API key to persistent storage:\n\n' + err);
+          throw new Error('Failed to save to persistent storage: ' + err);
+        }
+      } else {
+        console.warn('⚠️ Not running in Tauri, skipping persistent storage save');
+      }
+      
+      // Send to OPAL server to update environment for current session
+      await opal.callTool('update_anthropic_key', { apiKey: anthropicApiKey.trim() });
+      
+      setAnthropicError(null);
+      // Auto-test the connection after saving
+      setTimeout(() => testAnthropicConnection(), 500);
+    } catch (error) {
+      console.error('Error saving Anthropic API key:', error);
+      setAnthropicError('Failed to save API key: ' + error.message);
+    } finally {
+      setAnthropicKeySaving(false);
+    }
+  };
+
+  // Test Anthropic API connection
+  const testAnthropicConnection = async () => {
+    setAnthropicTesting(true);
+    setAnthropicError(null);
+    setAnthropicStatus('testing');
+    
+    try {
+      const result = await opal.callTool('test_anthropic_connection', {});
+      console.log('Anthropic API test result:', result);
+      
+      // Parse the response
+      let parsedResult;
+      if (result && result.content && Array.isArray(result.content)) {
+        try {
+          const textContent = result.content[0]?.text;
+          if (textContent) {
+            const jsonMatch = textContent.match(/"success":\s*(true|false)/i);
+            const isSuccess = jsonMatch && jsonMatch[1] === 'true';
+            const errorMatch = textContent.match(/"error":\s*"([^"]+)"/i);
+            const error = errorMatch ? errorMatch[1] : null;
+            parsedResult = { success: isSuccess, error: error };
+          }
+        } catch (e) {
+          console.error('Failed to parse MCP response:', e);
+        }
+      } else if (result && typeof result === 'object') {
+        parsedResult = result;
+      }
+      
+      const finalResult = parsedResult || result;
+      
+      if (finalResult && (finalResult.success === true || finalResult.isError === false)) {
+        setAnthropicStatus('connected');
+        // Models are already initialized in state, no need to set them again
+      } else {
+        setAnthropicStatus('error');
+        setAnthropicError(finalResult?.error || 'Unknown error testing Anthropic connection');
+      }
+    } catch (error) {
+      console.error('Anthropic API test error:', error);
+      setAnthropicStatus('error');
+      setAnthropicError(error.message || 'Failed to test Anthropic connection');
+    } finally {
+      setAnthropicTesting(false);
     }
   };
 
@@ -442,45 +559,112 @@ export default function OpalSettings({ isOpen, onClose }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* OpenAI API Key Input */}
+          {/* AI Provider Selection */}
           <div className="space-y-2">
-            <Label htmlFor="openai-api-key">OpenAI API Key</Label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  id="openai-api-key"
-                  type={showApiKey ? "text" : "password"}
-                  value={openaiApiKey}
-                  onChange={(e) => setOpenaiApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                >
-                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
-              <Button 
-                onClick={saveApiKey} 
-                disabled={apiKeySaving || !openaiApiKey.trim()}
-                size="sm"
-              >
-                {apiKeySaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  'Save'
-                )}
-              </Button>
-            </div>
-            <div className="text-xs text-gray-500">
-              Your API key is stored locally and sent securely to the OPAL server
-            </div>
+            <Label>AI Provider</Label>
+            <Select value={selectedProvider} onValueChange={(value) => {
+              setSelectedProvider(value);
+              localStorage.setItem('ai_provider', value);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select provider" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="openai">OpenAI (GPT-4, GPT-4o, etc.)</SelectItem>
+                <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          <Separator />
+
+          {/* OpenAI Configuration */}
+          {selectedProvider === 'openai' && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="openai-api-key">OpenAI API Key</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      id="openai-api-key"
+                      type={showOpenaiKey ? "text" : "password"}
+                      value={openaiApiKey}
+                      onChange={(e) => setOpenaiApiKey(e.target.value)}
+                      placeholder="sk-..."
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowOpenaiKey(!showOpenaiKey)}
+                    >
+                      {showOpenaiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <Button 
+                    onClick={saveOpenAIApiKey} 
+                    disabled={openaiKeySaving || !openaiApiKey.trim()}
+                    size="sm"
+                  >
+                    {openaiKeySaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Save'
+                    )}
+                  </Button>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Your API key is stored locally and sent securely to the OPAL server
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Anthropic Configuration */}
+          {selectedProvider === 'anthropic' && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="anthropic-api-key">Anthropic API Key</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      id="anthropic-api-key"
+                      type={showAnthropicKey ? "text" : "password"}
+                      value={anthropicApiKey}
+                      onChange={(e) => setAnthropicApiKey(e.target.value)}
+                      placeholder="sk-ant-..."
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowAnthropicKey(!showAnthropicKey)}
+                    >
+                      {showAnthropicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <Button 
+                    onClick={saveAnthropicApiKey} 
+                    disabled={anthropicKeySaving || !anthropicApiKey.trim()}
+                    size="sm"
+                  >
+                    {anthropicKeySaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Save'
+                    )}
+                  </Button>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Your API key is stored locally and sent securely to the OPAL server
+                </div>
+              </div>
+            </>
+          )}
 
           <Separator />
 
@@ -488,17 +672,17 @@ export default function OpalSettings({ isOpen, onClose }) {
           <div className="flex items-center justify-between">
             <span className="font-medium">API Status:</span>
             <Badge variant={
-              openaiStatus === 'connected' ? 'default' : 
-              openaiStatus === 'testing' ? 'secondary' : 
-              openaiStatus === 'error' ? 'destructive' : 'outline'
+              (selectedProvider === 'openai' ? openaiStatus : anthropicStatus) === 'connected' ? 'default' : 
+              (selectedProvider === 'openai' ? openaiStatus : anthropicStatus) === 'testing' ? 'secondary' : 
+              (selectedProvider === 'openai' ? openaiStatus : anthropicStatus) === 'error' ? 'destructive' : 'outline'
             }>
-              {openaiStatus === 'connected' ? 'Connected' : 
-               openaiStatus === 'testing' ? 'Testing...' : 
-               openaiStatus === 'error' ? 'Error' : 'Unknown'}
+              {(selectedProvider === 'openai' ? openaiStatus : anthropicStatus) === 'connected' ? 'Connected' : 
+               (selectedProvider === 'openai' ? openaiStatus : anthropicStatus) === 'testing' ? 'Testing...' : 
+               (selectedProvider === 'openai' ? openaiStatus : anthropicStatus) === 'error' ? 'Error' : 'Unknown'}
             </Badge>
           </div>
 
-          {/* AI Model Selection - Always show, not just when connected */}
+          {/* AI Model Selection */}
           <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-medium">AI Model:</span>
@@ -508,36 +692,46 @@ export default function OpalSettings({ isOpen, onClose }) {
                       <SelectValue placeholder="Select model" />
                     </SelectTrigger>
                     <SelectContent className="max-h-64 overflow-y-auto">
-                      {loadingModels ? (
-                        <div className="flex items-center justify-center p-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="ml-2 text-sm">Loading models...</span>
-                        </div>
-                      ) : openaiModels.length > 0 ? (
-                        openaiModels.map((model) => (
+                      {selectedProvider === 'openai' ? (
+                        loadingModels ? (
+                          <div className="flex items-center justify-center p-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="ml-2 text-sm">Loading models...</span>
+                          </div>
+                        ) : openaiModels.length > 0 ? (
+                          openaiModels.map((model) => (
+                            <SelectItem key={model.id} value={model.id}>
+                              <span className="font-mono text-sm">{model.id}</span>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <>
+                            <SelectItem value="gpt-4o">gpt-4o</SelectItem>
+                            <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
+                            <SelectItem value="gpt-4.1">gpt-4.1</SelectItem>
+                            <SelectItem value="gpt-4.1-mini">gpt-4.1-mini</SelectItem>
+                          </>
+                        )
+                      ) : (
+                        anthropicModels.map((model) => (
                           <SelectItem key={model.id} value={model.id}>
                             <span className="font-mono text-sm">{model.id}</span>
                           </SelectItem>
                         ))
-                      ) : (
-                        <>
-                          <SelectItem value="gpt-4o">gpt-4o</SelectItem>
-                          <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
-                          <SelectItem value="gpt-4.1">gpt-4.1</SelectItem>
-                          <SelectItem value="gpt-4.1-mini">gpt-4.1-mini</SelectItem>
-                        </>
                       )}
                     </SelectContent>
                   </Select>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={fetchOpenAIModels}
-                    disabled={loadingModels}
-                    title="Refresh models list"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${loadingModels ? 'animate-spin' : ''}`} />
-                  </Button>
+                  {selectedProvider === 'openai' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={fetchOpenAIModels}
+                      disabled={loadingModels}
+                      title="Refresh models list"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${loadingModels ? 'animate-spin' : ''}`} />
+                    </Button>
+                  )}
                 </div>
               </div>
               
@@ -550,20 +744,28 @@ export default function OpalSettings({ isOpen, onClose }) {
               )}
               
               <div className="text-xs text-gray-500">
-                Models are fetched dynamically from OpenAI API. Changes take effect immediately.
+                {selectedProvider === 'openai' 
+                  ? 'Models are fetched dynamically from OpenAI API. Changes take effect immediately.'
+                  : 'Select from available Claude models. Changes take effect immediately.'}
               </div>
             </div>
 
           {/* Error Display */}
-          {openaiError && (
+          {selectedProvider === 'openai' && openaiError && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>{openaiError}</AlertDescription>
             </Alert>
           )}
+          {selectedProvider === 'anthropic' && anthropicError && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{anthropicError}</AlertDescription>
+            </Alert>
+          )}
 
           {/* Success Display */}
-          {openaiStatus === 'connected' && !openaiError && (
+          {selectedProvider === 'openai' && openaiStatus === 'connected' && !openaiError && (
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
@@ -571,26 +773,49 @@ export default function OpalSettings({ isOpen, onClose }) {
               </AlertDescription>
             </Alert>
           )}
+          {selectedProvider === 'anthropic' && anthropicStatus === 'connected' && !anthropicError && (
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                Anthropic API is working correctly. AI Feedback and other AI features should function properly.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Test Button */}
           <div className="flex justify-start pt-2">
-            <Button 
-              onClick={testOpenAIConnection} 
-              disabled={openaiTesting || status !== 'ready'}
-              variant="outline"
-            >
-              {openaiTesting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Zap className="mr-2 h-4 w-4" />
-              )}
-              {openaiTesting ? 'Testing Connection...' : 'Test OpenAI API'}
-            </Button>
+            {selectedProvider === 'openai' ? (
+              <Button 
+                onClick={testOpenAIConnection} 
+                disabled={openaiTesting || status !== 'ready'}
+                variant="outline"
+              >
+                {openaiTesting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Zap className="mr-2 h-4 w-4" />
+                )}
+                {openaiTesting ? 'Testing Connection...' : 'Test OpenAI API'}
+              </Button>
+            ) : (
+              <Button 
+                onClick={testAnthropicConnection} 
+                disabled={anthropicTesting || status !== 'ready'}
+                variant="outline"
+              >
+                {anthropicTesting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Zap className="mr-2 h-4 w-4" />
+                )}
+                {anthropicTesting ? 'Testing Connection...' : 'Test Anthropic API'}
+              </Button>
+            )}
           </div>
 
           {status !== 'ready' && (
             <div className="text-sm text-gray-500">
-              Connect to OPAL first to test OpenAI API connection.
+              Connect to OPAL first to test API connection.
             </div>
           )}
         </CardContent>

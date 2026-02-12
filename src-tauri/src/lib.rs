@@ -99,6 +99,53 @@ fn load_openai_api_key(app: tauri::AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn save_anthropic_api_key(app: tauri::AppHandle, api_key: String) -> Result<String, String> {
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    
+    let config_file = app_data_dir.join("anthropic_config.json");
+    
+    fs::create_dir_all(&app_data_dir)
+        .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    
+    let config = serde_json::json!({
+        "api_key": api_key
+    });
+    
+    fs::write(&config_file, config.to_string())
+        .map_err(|e| format!("Failed to save API key: {}", e))?;
+    
+    let success_msg = format!("✅ Saved Anthropic API key to: {:?}", config_file);
+    println!("{}", success_msg);
+    Ok(success_msg)
+}
+
+#[tauri::command]
+fn load_anthropic_api_key(app: tauri::AppHandle) -> Result<String, String> {
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    
+    let config_file = app_data_dir.join("anthropic_config.json");
+    
+    if !config_file.exists() {
+        return Ok(String::new());
+    }
+    
+    let content = fs::read_to_string(&config_file)
+        .map_err(|e| format!("Failed to read config file: {}", e))?;
+    
+    let config: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse config file: {}", e))?;
+    
+    let api_key = config.get("api_key")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    
+    Ok(api_key)
+}
+
+#[tauri::command]
 async fn restart_opal_server(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
@@ -473,7 +520,9 @@ pub fn run() {
             get_notes_api_url,
             restart_opal_server,
             save_openai_api_key,
-            load_openai_api_key
+            load_openai_api_key,
+            save_anthropic_api_key,
+            load_anthropic_api_key
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::Destroyed = event {

@@ -72,6 +72,113 @@ function registerJournalTools(configs, wss) {
       }
     }
   );
+
+  // Update Anthropic API key tool
+  toolCreator.createTool(
+    configs,
+    wss,
+    {
+      name: 'update_anthropic_key',
+      description: 'Update the Anthropic API key for the server',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          apiKey: {
+            type: 'string',
+            description: 'The Anthropic API key to set'
+          }
+        },
+        required: ['apiKey']
+      },
+      _internal: {
+        processor: async (params) => {
+          try {
+            const { apiKey } = params;
+            
+            if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+              throw new Error('Invalid Anthropic API key format');
+            }
+            
+            // Update the environment variable
+            process.env.ANTHROPIC_API_KEY = apiKey;
+            
+            // Also update the ConfigLoader's cached key if it has that method
+            try {
+              const configLoader = require('../config-loader');
+              if (configLoader.setAnthropicApiKey) {
+                configLoader.setAnthropicApiKey(apiKey);
+                logger.info('Anthropic API key updated in ConfigLoader cache');
+              }
+            } catch (e) {
+              logger.warn('Could not update ConfigLoader cache:', e.message);
+            }
+            
+            logger.info(`Anthropic API key updated in environment: ${apiKey.substring(0, 10)}...`);
+            
+            return {
+              success: true,
+              message: 'Anthropic API key updated successfully'
+            };
+          } catch (error) {
+            logger.error('Error updating Anthropic API key:', error);
+            throw error;
+          }
+        }
+      }
+    }
+  );
+
+  // Test Anthropic connection tool
+  toolCreator.createTool(
+    configs,
+    wss,
+    {
+      name: 'test_anthropic_connection',
+      description: 'Test the Anthropic API connection',
+      inputSchema: {
+        type: 'object',
+        properties: {}
+      },
+      _internal: {
+        processor: async () => {
+          try {
+            const apiKey = process.env.ANTHROPIC_API_KEY;
+            
+            if (!apiKey) {
+              return {
+                success: false,
+                error: 'No Anthropic API key configured'
+              };
+            }
+
+            // Test with a simple API call
+            const Anthropic = require('@anthropic-ai/sdk');
+            const anthropic = new Anthropic({ apiKey });
+            
+            // Make a minimal test request
+            const message = await anthropic.messages.create({
+              model: 'claude-3-5-haiku-20241022',
+              max_tokens: 10,
+              messages: [{ role: 'user', content: 'Hi' }]
+            });
+            
+            logger.info('Anthropic API connection test successful');
+            
+            return {
+              success: true,
+              message: 'Anthropic API is working correctly'
+            };
+          } catch (error) {
+            logger.error('Anthropic API connection test failed:', error);
+            return {
+              success: false,
+              error: error.message || 'Failed to connect to Anthropic API'
+            };
+          }
+        }
+      }
+    }
+  );
   
   // AI feedback tool
   toolCreator.createTool(

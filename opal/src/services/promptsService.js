@@ -347,31 +347,45 @@ function listPrompts(paginateItems, cursor = null) {
  * @returns {Promise<string>} The AI-generated feedback
  */
 async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserId = 'default', model = 'gpt-4o') {
-  // Try multiple environment variable names and fallback methods
-  let apiKey = process.env.OPENAI_API_KEY || 
-               process.env.OPENAI_KEY || 
-               process.env.API_KEY_OPENAI;
+  // Detect provider based on model name
+  const isAnthropicModel = model && (model.startsWith('claude-') || model.includes('claude'));
   
-  // If still no API key, try loading from config-loader as fallback
-  if (!apiKey) {
-    try {
-      const configLoader = require('../config-loader');
-      apiKey = configLoader.getOpenAIApiKey();
-      if (apiKey) {
-        logger.info('[PromptsService] Retrieved OpenAI API key from config loader fallback');
-      }
-    } catch (error) {
-      logger.warn('[PromptsService] Config loader fallback failed:', error.message);
+  // Get the appropriate API key
+  let apiKey;
+  if (isAnthropicModel) {
+    apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      logger.error('[PromptsService] ANTHROPIC_API_KEY not found in environment');
+      throw new Error('Anthropic API key not configured on the server. Please configure it in Settings.');
     }
+    logger.info('[PromptsService] Anthropic API key successfully loaded for AI Feedback');
+  } else {
+    // Try multiple environment variable names and fallback methods for OpenAI
+    apiKey = process.env.OPENAI_API_KEY || 
+             process.env.OPENAI_KEY || 
+             process.env.API_KEY_OPENAI;
+    
+    // If still no API key, try loading from config-loader as fallback
+    if (!apiKey) {
+      try {
+        const configLoader = require('../config-loader');
+        apiKey = configLoader.getOpenAIApiKey();
+        if (apiKey) {
+          logger.info('[PromptsService] Retrieved OpenAI API key from config loader fallback');
+        }
+      } catch (error) {
+        logger.warn('[PromptsService] Config loader fallback failed:', error.message);
+      }
+    }
+    
+    if (!apiKey) {
+      logger.error('[PromptsService] OPENAI_API_KEY not found in any environment variable or config');
+      logger.error('[PromptsService] Checked: OPENAI_API_KEY, OPENAI_KEY, API_KEY_OPENAI');
+      throw new Error('OpenAI API key not configured on the server. Please check your .env file.');
+    }
+    
+    logger.info('[PromptsService] OpenAI API key successfully loaded for AI Feedback');
   }
-  
-  if (!apiKey) {
-    logger.error('[PromptsService] OPENAI_API_KEY not found in any environment variable or config');
-    logger.error('[PromptsService] Checked: OPENAI_API_KEY, OPENAI_KEY, API_KEY_OPENAI');
-    throw new Error('OpenAI API key not configured on the server. Please check your .env file.');
-  }
-  
-  logger.info('[PromptsService] OpenAI API key successfully loaded for AI Feedback');
   
   // Import the identityProfileService
   const { getIdentityProfile } = require('./identityProfileService');
@@ -597,40 +611,89 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
   try {
     const fetch = (await import('node-fetch')).default;
     
-    console.log('[PromptsService] Making OpenAI API request with model:', validatedModel);
-    console.log('[PromptsService] API key preview:', apiKey.substring(0, 10) + '...');
-    
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
+    if (isAnthropicModel) {
+      // Call Anthropic API
+      console.log('[PromptsService] Making Anthropic API request with model:', validatedModel);
+      console.log('[PromptsService] API key preview:', apiKey.substring(0, 10) + '...');
+      
+      // Convert OpenAI message format to Anthropic format
+      const systemMessages = body.messages.filter(m => m.role === 'system').map(m => m.content).join('\n\n');
+      const userMessage = body.messages.find(m => m.role === 'user')?.content || entryContent;
+      
+      const anthropicBody = {
+        model: validatedModel,
+        max_tokens: 1800,
+        system: systemMessages,
+        messages: [
+          { role: 'user', content: userMessage }
+        ]
+      };
+      
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(anthropicBody)
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[PromptsService] OpenAI API error response:', response.status, errorText);
-      logger.error(`OpenAI API error: ${response.status} ${errorText}`);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[PromptsService] Anthropic API error response:', response.status, errorText);
+        logger.error(`Anthropic API error: ${response.status} ${errorText}`);
+        throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
+      }
 
-    const data = await response.json();
-    console.log('[PromptsService] OpenAI API response received, choices:', data.choices?.length);
-    
-    const feedback = data.choices?.[0]?.message?.content?.trim();
-    if (!feedback) {
-      console.error('[PromptsService] No feedback in response:', JSON.stringify(data));
-      throw new Error('No feedback returned from OpenAI.');
+      const data = await response.json();
+      console.log('[PromptsService] Anthropic API response received');
+      
+      const feedback = data.content?.[0]?.text?.trim();
+      if (!feedback) {
+        console.error('[PromptsService] No feedback in Anthropic response:', JSON.stringify(data));
+        throw new Error('No feedback returned from Anthropic.');
+      }
+      
+      console.log('[PromptsService] Successfully got feedback from Anthropic, length:', feedback.length);
+      return feedback;
+    } else {
+      // Call OpenAI API
+      console.log('[PromptsService] Making OpenAI API request with model:', validatedModel);
+      console.log('[PromptsService] API key preview:', apiKey.substring(0, 10) + '...');
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[PromptsService] OpenAI API error response:', response.status, errorText);
+        logger.error(`OpenAI API error: ${response.status} ${errorText}`);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('[PromptsService] OpenAI API response received, choices:', data.choices?.length);
+      
+      const feedback = data.choices?.[0]?.message?.content?.trim();
+      if (!feedback) {
+        console.error('[PromptsService] No feedback in response:', JSON.stringify(data));
+        throw new Error('No feedback returned from OpenAI.');
+      }
+      
+      console.log('[PromptsService] Successfully got feedback, length:', feedback.length);
+      return feedback;
     }
-    
-    console.log('[PromptsService] Successfully got feedback, length:', feedback.length);
-    return feedback;
   } catch (error) {
-    console.error('[PromptsService] Error calling OpenAI for feedback:', error.message);
+    console.error('[PromptsService] Error calling AI service for feedback:', error.message);
     console.error('[PromptsService] Full error:', error);
-    logger.error('Error calling OpenAI for feedback:', error);
+    logger.error('Error calling AI service for feedback:', error);
     throw new Error(`Failed to get feedback from AI service: ${error.message}`);
   }
 }
