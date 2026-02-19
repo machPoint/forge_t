@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useJournal } from "@/hooks/useJournal";
-import { getPersonas } from "@/lib/aiPersonas"; 
+import { getPersonas, cachePersonas, getPersonasSync } from "@/lib/aiPersonas"; 
 import { Check, ChevronsUpDown, Brain, Heart, Target, CircleHelp, Sparkles, Lightbulb, Compass, Shield, Star, Flame, Zap, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -46,21 +46,68 @@ const AIPersonaSelector: React.FC = () => {
   // If an entry is selected, use its persona. Otherwise, use the global active persona.
   const displayPersonaId = selectedEntry?.personaId || activePersonaId;
 
-  // Get personas from localStorage or use defaults
-  const [personas, setPersonas] = React.useState(getPersonas());
+  // Get personas from database
+  const [personas, setPersonas] = React.useState(() => {
+    const cached = getPersonasSync();
+    console.log('[AIPersonaSelector] Initial load (cached):', cached.map(p => ({ id: p.id, name: p.name })));
+    return cached;
+  });
   
-  // Update personas when localStorage changes
+  const [loading, setLoading] = React.useState(false);
+  
+  // Load personas from database on mount
   React.useEffect(() => {
-    const handleStorageChange = () => {
-      setPersonas(getPersonas());
+    const loadPersonas = async () => {
+      try {
+        setLoading(true);
+        console.log('[AIPersonaSelector] Loading personas from database');
+        const loadedPersonas = await getPersonas();
+        console.log('[AIPersonaSelector] Loaded personas:', loadedPersonas.map(p => ({ id: p.id, name: p.name })));
+        setPersonas(loadedPersonas);
+        cachePersonas(loadedPersonas);
+      } catch (error) {
+        console.error('[AIPersonaSelector] Error loading personas:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    loadPersonas();
+    
+    // Listen for custom event when personas are updated
+    const handlePersonasUpdate = async () => {
+      console.log('[AIPersonaSelector] Personas updated event, reloading');
+      await loadPersonas();
+    };
+    window.addEventListener('personasUpdated', handlePersonasUpdate);
+    
+    return () => {
+      window.removeEventListener('personasUpdated', handlePersonasUpdate);
+    };
   }, []);
+  
+  // Refresh personas when popover opens
+  React.useEffect(() => {
+    if (open) {
+      const refreshPersonas = async () => {
+        try {
+          console.log('[AIPersonaSelector] Refreshing personas on dropdown open');
+          const loadedPersonas = await getPersonas();
+          console.log('[AIPersonaSelector] Refreshed personas:', loadedPersonas.map(p => ({ id: p.id, name: p.name })));
+          setPersonas(loadedPersonas);
+          cachePersonas(loadedPersonas);
+        } catch (error) {
+          console.error('[AIPersonaSelector] Error refreshing personas:', error);
+        }
+      };
+      
+      refreshPersonas();
+    }
+  }, [open]);
   
   // Add defensive fallback for personas
   const safePersonas = personas || [];
+  console.log('[AIPersonaSelector] Rendering with personas:', safePersonas.map(p => ({ id: p.id, name: p.name })));
   const currentPersona = safePersonas.find(persona => persona.id === displayPersonaId) || safePersonas[0];
 
   // If no personas are available, render a disabled button
@@ -110,7 +157,7 @@ const AIPersonaSelector: React.FC = () => {
               {safePersonas.map((persona) => (
                 <CommandItem
                   key={persona.id}
-                  value={persona.id}
+                  value={persona.name}
                   onSelect={() => {
                     setActivePersonaId(persona.id);
                     if (selectedEntry) {

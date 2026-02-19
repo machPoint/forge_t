@@ -18,8 +18,8 @@ const logger = require('../logger');
  */
 async function logToolExecution(userId, toolName, parameters, result = null, status = 'completed', durationMs = null) {
   try {
-    // Insert audit log
-    const [logEntry] = await db('tool_runs').insert({
+    // Insert audit log (SQLite-safe: avoid .returning())
+    const insertResult = await db('tool_runs').insert({
       user_id: userId,
       tool_name: toolName,
       parameters: JSON.stringify(parameters),
@@ -27,7 +27,13 @@ async function logToolExecution(userId, toolName, parameters, result = null, sta
       status,
       duration_ms: durationMs,
       executed_at: db.fn.now()
-    }).returning('*');
+    });
+
+    const insertedId = Array.isArray(insertResult) ? insertResult[0] : insertResult;
+    let logEntry = null;
+    if (insertedId !== undefined && insertedId !== null) {
+      logEntry = await db('tool_runs').where({ id: insertedId }).first();
+    }
     
     logger.info(`Logged tool execution: ${toolName} by user: ${userId || 'anonymous'}`);
     return logEntry;

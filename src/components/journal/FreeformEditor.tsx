@@ -260,7 +260,7 @@ const FreeformEditor: React.FC<FreeformEditorProps> = ({
     
     try {
       // Get the persona prompt
-      const persona = getPersonaById(activePersonaId);
+      const persona = await getPersonaById(activePersonaId);
       const personaPrompt = persona?.prompt || "";
       console.log('[FreeformEditor] Using persona:', { 
         id: activePersonaId, 

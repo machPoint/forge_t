@@ -1,3 +1,4 @@
+import { getPersonas as getPersonasFromDB, getPersonaById as getPersonaByIdFromDB } from '@/services/personaService';
 
 export type AIPersona = {
   id: string;
@@ -8,7 +9,7 @@ export type AIPersona = {
   accentColor: string;
 };
 
-// Default personas that will be used if no custom personas are found in localStorage
+// Default personas that will be used as fallback
 export const defaultPersonas: AIPersona[] = [
   {
     id: "jungian",
@@ -44,30 +45,68 @@ export const defaultPersonas: AIPersona[] = [
   },
 ];
 
-// Get personas from localStorage or use defaults
-export const getPersonas = (): AIPersona[] => {
+// Get personas from database
+export const getPersonas = async (): Promise<AIPersona[]> => {
   if (typeof window === 'undefined') {
     return defaultPersonas;
   }
   
   try {
-    const storedPersonas = window.localStorage.getItem('aiPersonas');
-    return storedPersonas ? JSON.parse(storedPersonas) : defaultPersonas;
+    console.log('[getPersonas] Fetching from database');
+    const personas = await getPersonasFromDB();
+    console.log('[getPersonas] Fetched personas:', personas.map((p: AIPersona) => ({ id: p.id, name: p.name })));
+    
+    // If no personas found, return defaults (they should be initialized on login)
+    if (personas.length === 0) {
+      console.log('[getPersonas] No personas found, returning defaults');
+      return defaultPersonas;
+    }
+    
+    return personas;
   } catch (error) {
-    console.error('Error loading personas from localStorage:', error);
+    console.error('Error loading personas from database:', error);
     return defaultPersonas;
   }
 };
 
-// For backward compatibility, expose the personas as a variable
-export const aiPersonas = getPersonas();
+// Synchronous version for backward compatibility - returns cached or defaults
+let cachedPersonas: AIPersona[] | null = null;
 
-// Get a specific persona by ID
-export const getPersonaById = (id: string): AIPersona => {
-  const personas = getPersonas();
-  const persona = personas.find((p) => p.id === id);
-  if (!persona) {
-    return personas[0];
+export const getPersonasSync = (): AIPersona[] => {
+  if (cachedPersonas) {
+    return cachedPersonas;
   }
-  return persona;
+  return defaultPersonas;
+};
+
+// Cache personas for synchronous access
+export const cachePersonas = (personas: AIPersona[]) => {
+  cachedPersonas = personas;
+};
+
+// For backward compatibility, expose the personas as a variable
+export const aiPersonas = defaultPersonas;
+
+// Get a specific persona by ID (async, DB-backed)
+export const getPersonaByIdAsync = async (id: string): Promise<AIPersona> => {
+  try {
+    const persona = await getPersonaByIdFromDB(id);
+    if (persona) {
+      return persona;
+    }
+  } catch (error) {
+    console.error('Error fetching persona by ID:', error);
+  }
+  
+  // Fallback to cached or default personas
+  const personas = cachedPersonas || defaultPersonas;
+  const persona = personas.find((p) => p.id === id);
+  return persona || personas[0];
+};
+
+// Get a specific persona by ID (sync, cache/default-backed)
+export const getPersonaById = (id: string): AIPersona => {
+  const personas = cachedPersonas || defaultPersonas;
+  const persona = personas.find((p) => p.id === id);
+  return persona || personas[0];
 };

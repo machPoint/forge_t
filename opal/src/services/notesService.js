@@ -30,9 +30,11 @@ async function createNote(userId, noteData) {
 
     logger.debug(`[NotesService] Sanitized note data: ${JSON.stringify(minimalData)}`);
     
-    const [newNote] = await db('notes')
-      .insert(minimalData)
-      .returning('*');
+    const insertResult = await db('notes').insert(minimalData);
+    const insertedId = Array.isArray(insertResult) ? insertResult[0] : insertResult;
+    const newNote = await db('notes')
+      .where({ id: insertedId, user_id: userId })
+      .first();
     
     // Convert snake_case keys from database back to camelCase for frontend
     return toCamelCase(newNote);
@@ -99,10 +101,13 @@ async function updateNote(noteId, userId, updates) {
     
     logger.debug(`[NotesService] Safe update data (snake_case): ${JSON.stringify(snakeCaseUpdates)}`);
     
-    const [updatedNote] = await db('notes')
+    await db('notes')
       .where({ id: noteId, user_id: userId })
-      .update(snakeCaseUpdates)
-      .returning('*');
+      .update(snakeCaseUpdates);
+
+    const updatedNote = await db('notes')
+      .where({ id: noteId, user_id: userId })
+      .first();
     
     if (!updatedNote) {
       logger.error(`[NotesService] No note found or updated with id ${noteId} for user ${userId}`);

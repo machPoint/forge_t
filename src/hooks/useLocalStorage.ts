@@ -32,6 +32,11 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
       // Save to local storage
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        
+        // Dispatch custom event for personas updates
+        if (key === 'aiPersonas') {
+          window.dispatchEvent(new CustomEvent('personasUpdated'));
+        }
       }
     } catch (error) {
       // A more advanced implementation would handle the error case

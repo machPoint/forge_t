@@ -8,3 +8,4 @@ ai button for summarizing Core entries and tag suggestions
 get icons to show up
 ai feedback working spinner
 notes don't save
+personas not showing up

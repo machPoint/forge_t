@@ -64,7 +64,8 @@ import {
   ChatSystemPrompt,
   defaultChatSystemPrompt 
 } from "@/lib/chatSystemPrompt";
-import { AIPersona, aiPersonas as defaultPersonas } from "@/lib/aiPersonas";
+import { AIPersona, getPersonas, cachePersonas } from "@/lib/aiPersonas";
+import { getPersonas as getPersonasFromDB, createPersona, updatePersona, deletePersona } from "@/services/personaService";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useAuth } from "@/hooks/useAuth";
 import AppHeader from "@/components/AppHeader";
@@ -88,8 +89,9 @@ const iconOptions = [
 ];
 
 const AdminPage = () => {
-  // State for personas
-  const [personas, setPersonas] = useLocalStorage<AIPersona[]>("aiPersonas", defaultPersonas);
+  // State for personas - now using database
+  const [personas, setPersonas] = useState<AIPersona[]>([]);
+  const [personasLoading, setPersonasLoading] = useState(true);
   const [editingPersona, setEditingPersona] = useState<AIPersona | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("personas");
@@ -97,6 +99,26 @@ const AdminPage = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [selectedModel, setSelectedModel] = useLocalStorage<string>("selectedAIModel", "gpt-4o");
   const [availableModels, setAvailableModels] = useState<Array<{id: string, owned_by?: string}>>([]);
+  
+  // Load personas from database on mount
+  useEffect(() => {
+    const loadPersonas = async () => {
+      try {
+        setPersonasLoading(true);
+        console.log('[AdminPage] Loading personas from database');
+        const loadedPersonas = await getPersonasFromDB();
+        console.log('[AdminPage] Loaded personas:', loadedPersonas);
+        setPersonas(loadedPersonas);
+        cachePersonas(loadedPersonas);
+      } catch (error) {
+        console.error('[AdminPage] Error loading personas:', error);
+      } finally {
+        setPersonasLoading(false);
+      }
+    };
+    
+    loadPersonas();
+  }, []);
   const [loadingModels, setLoadingModels] = useState(false);
 
   // Fetch available models from OpenAI API via test_openai_connection
@@ -195,26 +217,73 @@ const AdminPage = () => {
   };
 
   // Save persona changes
-  const savePersona = () => {
+  const savePersona = async () => {
     if (!editingPersona) return;
 
     const isNew = !personas.some(p => p.id === editingPersona.id);
     
-    if (isNew) {
-      setPersonas([...personas, editingPersona]);
-    } else {
-      setPersonas(personas.map(p => 
-        p.id === editingPersona.id ? editingPersona : p
-      ));
-    }
+    console.log('[AdminPage] Saving persona:', editingPersona.name, 'isNew:', isNew);
     
-    setIsDialogOpen(false);
-    setEditingPersona(null);
+    try {
+      if (isNew) {
+        // Create new persona in database
+        const created = await createPersona({
+          name: editingPersona.name,
+          description: editingPersona.description,
+          icon: editingPersona.icon,
+          prompt: editingPersona.prompt,
+          accentColor: editingPersona.accentColor
+        });
+        console.log('[AdminPage] Created persona:', created);
+        
+        const newPersonas = [...personas, created];
+        setPersonas(newPersonas);
+        cachePersonas(newPersonas);
+      } else {
+        // Update existing persona in database
+        const updated = await updatePersona(editingPersona.id, {
+          name: editingPersona.name,
+          description: editingPersona.description,
+          icon: editingPersona.icon,
+          prompt: editingPersona.prompt,
+          accentColor: editingPersona.accentColor
+        });
+        console.log('[AdminPage] Updated persona:', updated);
+        
+        const updatedPersonas = personas.map(p => 
+          p.id === editingPersona.id ? updated : p
+        );
+        setPersonas(updatedPersonas);
+        cachePersonas(updatedPersonas);
+      }
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('personasUpdated'));
+      
+      setIsDialogOpen(false);
+      setEditingPersona(null);
+    } catch (error) {
+      console.error('[AdminPage] Error saving persona:', error);
+      alert('Failed to save persona: ' + (error as Error).message);
+    }
   };
 
   // Delete a persona
-  const deletePersona = (id: string) => {
-    setPersonas(personas.filter(p => p.id !== id));
+  const deletePersonaHandler = async (id: string) => {
+    try {
+      console.log('[AdminPage] Deleting persona:', id);
+      await deletePersona(id);
+      
+      const updatedPersonas = personas.filter(p => p.id !== id);
+      setPersonas(updatedPersonas);
+      cachePersonas(updatedPersonas);
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('personasUpdated'));
+    } catch (error) {
+      console.error('[AdminPage] Error deleting persona:', error);
+      alert('Failed to delete persona: ' + (error as Error).message);
+    }
   };
 
   // Handle input changes for editing persona
@@ -227,8 +296,26 @@ const AdminPage = () => {
   };
 
   // Reset personas to default
-  const resetToDefault = () => {
-    setPersonas(defaultPersonas);
+  const resetToDefault = async () => {
+    try {
+      // Delete all existing personas
+      for (const persona of personas) {
+        await deletePersona(persona.id);
+      }
+      
+      // Reload personas from database (should be empty or show defaults)
+      const loadedPersonas = await getPersonasFromDB();
+      setPersonas(loadedPersonas);
+      cachePersonas(loadedPersonas);
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('personasUpdated'));
+      
+      alert('Personas reset. Please refresh the page to initialize default personas.');
+    } catch (error) {
+      console.error('[AdminPage] Error resetting personas:', error);
+      alert('Failed to reset personas: ' + (error as Error).message);
+    }
   };
 
   // AI Insights prompt handlers
@@ -366,7 +453,7 @@ const AdminPage = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => deletePersona(persona.id)}
+                      onClick={() => deletePersonaHandler(persona.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
