@@ -9,6 +9,7 @@ class ConfigLoader {
   constructor() {
     this.config = {};
     this.openaiApiKey = null;
+    this.anthropicApiKey = null;
   }
 
   /**
@@ -22,11 +23,21 @@ class ConfigLoader {
     this.openaiApiKey = process.env.OPENAI_API_KEY || 
                        process.env.OPENAI_KEY || 
                        process.env.API_KEY_OPENAI;
+
+    this.anthropicApiKey = process.env.ANTHROPIC_API_KEY ||
+                          process.env.ANTHROPIC_KEY ||
+                          process.env.API_KEY_ANTHROPIC;
     
     if (this.openaiApiKey) {
       logger.info('[ConfigLoader] OpenAI API key loaded successfully');
     } else {
       logger.warn('[ConfigLoader] No OpenAI API key found in environment');
+    }
+
+    if (this.anthropicApiKey) {
+      logger.info('[ConfigLoader] Anthropic API key loaded successfully');
+    } else {
+      logger.warn('[ConfigLoader] No Anthropic API key found in environment');
     }
   }
 
@@ -63,6 +74,36 @@ class ConfigLoader {
   }
 
   /**
+   * Get Anthropic API key with fallback handling
+   * @returns {string|null} The Anthropic API key or null if not found
+   */
+  getAnthropicApiKey() {
+    if (this.anthropicApiKey) {
+      return this.anthropicApiKey;
+    }
+
+    this.anthropicApiKey = process.env.ANTHROPIC_API_KEY ||
+                          process.env.ANTHROPIC_KEY ||
+                          process.env.API_KEY_ANTHROPIC;
+
+    return this.anthropicApiKey;
+  }
+
+  /**
+   * Set Anthropic API key explicitly (used by main process / tools)
+   * @param {string} apiKey - The Anthropic API key
+   */
+  setAnthropicApiKey(apiKey) {
+    if (apiKey && typeof apiKey === 'string' && apiKey.trim()) {
+      this.anthropicApiKey = apiKey.trim();
+      process.env.ANTHROPIC_API_KEY = this.anthropicApiKey;
+      logger.info('[ConfigLoader] Anthropic API key set explicitly');
+    } else {
+      logger.warn('[ConfigLoader] Invalid API key provided to setAnthropicApiKey');
+    }
+  }
+
+  /**
    * Get configuration value
    * @param {string} key - Configuration key
    * @param {*} defaultValue - Default value if key not found
@@ -88,6 +129,14 @@ class ConfigLoader {
    */
   hasOpenAIApiKey() {
     return !!this.getOpenAIApiKey();
+  }
+
+  /**
+   * Check if Anthropic API key is available
+   * @returns {boolean} True if API key is available
+   */
+  hasAnthropicApiKey() {
+    return !!this.getAnthropicApiKey();
   }
 }
 

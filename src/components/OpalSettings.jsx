@@ -60,10 +60,147 @@ export default function OpalSettings({ isOpen, onClose }) {
     return getSelectedModel();
   });
   
+  // TERRAIN import state
+  const [terrainFile, setTerrainFile] = useState(null);
+  const [terrainImporting, setTerrainImporting] = useState(false);
+  const [terrainImportStatus, setTerrainImportStatus] = useState(null);
+  
   const handleModelChange = (newModel) => {
     setSelectedModel(newModel); // Update local React state
     saveSelectedModel(newModel); // Update localStorage via modelConfig
     console.log('AI model changed to:', newModel);
+  };
+  
+  const handleTerrainFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setTerrainFile(file);
+      setTerrainImportStatus(null);
+    }
+  };
+  
+  const importTerrainData = async () => {
+    if (!terrainFile) return;
+    
+    setTerrainImporting(true);
+    setTerrainImportStatus(null);
+    
+    try {
+      const fileContent = await terrainFile.text();
+      let rawData = JSON.parse(fileContent);
+      
+      // Transform actual TERRAIN export to expected schema
+      let snapshot = rawData;
+      
+      // If missing required fields, add them and transform structure
+      if (!rawData.terrain_version || !rawData.exported_at) {
+        console.log('[OpalSettings] Transforming TERRAIN export to expected schema');
+        
+        snapshot = {
+          terrain_version: 1,
+          exported_at: new Date().toISOString(),
+          
+          // Transform reps to expected format
+          reps: {
+            last_7_days: (rawData.reps || []).map(rep => ({
+              lane: rep.lane,
+              finish_line: rep.finish_line,
+              prediction: rep.prediction,
+              reality: rep.reality,
+              completed: rep.completed,
+              duration_actual_sec: rep.duration_actual_sec
+            }))
+          },
+          
+          // Transform quests to protocols format
+          protocols: {
+            today: rawData.quests?.find(q => {
+              const questDate = new Date(q.date);
+              const today = new Date();
+              return questDate.toDateString() === today.toDateString();
+            }) ? {
+              title: rawData.quests.find(q => {
+                const questDate = new Date(q.date);
+                const today = new Date();
+                return questDate.toDateString() === today.toDateString();
+              }).title,
+              status: rawData.quests.find(q => {
+                const questDate = new Date(q.date);
+                const today = new Date();
+                return questDate.toDateString() === today.toDateString();
+              }).status,
+              xp_awarded: rawData.quests.find(q => {
+                const questDate = new Date(q.date);
+                const today = new Date();
+                return questDate.toDateString() === today.toDateString();
+              }).xp_awarded
+            } : null,
+            last_7_days: (rawData.quests || [])
+              .filter(q => q.status === 'COMPLETED')
+              .slice(-7)
+              .map(q => ({
+                date: q.date,
+                title: q.title,
+                status: q.status,
+                xp_awarded: q.xp_awarded,
+                quest_type: q.quest_type,
+                difficulty: q.difficulty
+              }))
+          },
+          
+          // Transform sentry entries
+          sentry: {
+            last_14_days: (rawData.sentryEntries || []).map(entry => ({
+              trigger_type: entry.trigger_type,
+              map_character: entry.map_character,
+              intensity: entry.intensity,
+              response: entry.response,
+              one_liner: entry.one_liner
+            }))
+          },
+          
+          // Keep accomplishments as-is
+          accomplishments: {
+            last_30_days: (rawData.accomplishments || []).map(acc => ({
+              title: acc.title,
+              description: acc.description,
+              category: acc.category,
+              date: new Date(acc.date).toISOString().split('T')[0]
+            }))
+          },
+          
+          // Keep notes as-is
+          notes: rawData.notes || [],
+          
+          // Add empty fasting data if not present
+          fasting: rawData.fasting || null
+        };
+      }
+      
+      // Import via OPAL tool
+      const result = await opal.callTool('import_terrain_snapshot', { snapshot });
+      
+      if (result.success) {
+        setTerrainImportStatus({
+          type: 'success',
+          message: result.message || 'TERRAIN data imported successfully'
+        });
+        setTerrainFile(null);
+        // Reset file input
+        const fileInput = document.getElementById('terrain-file');
+        if (fileInput) fileInput.value = '';
+      } else {
+        throw new Error(result.message || 'Import failed');
+      }
+    } catch (error) {
+      console.error('[OpalSettings] TERRAIN import error:', error);
+      setTerrainImportStatus({
+        type: 'error',
+        message: error.message || 'Failed to import TERRAIN data'
+      });
+    } finally {
+      setTerrainImporting(false);
+    }
   };
 
   useEffect(() => {
@@ -141,19 +278,27 @@ export default function OpalSettings({ isOpen, onClose }) {
         setIsConnecting(false);
         setError(null);
         
-        // When OPAL becomes ready, send the saved API key if we have one
-        const savedKey = localStorage.getItem('openai_api_key');
-        console.log('[OpalSettings] OPAL is ready, checking for saved API key...');
-        if (savedKey) {
-          console.log('[OpalSettings] ✅ Found saved API key, sending to OPAL server:', savedKey.substring(0, 10) + '...');
+        // When OPAL becomes ready, sync any stored provider keys to OPAL runtime
+        const savedOpenAIKey = localStorage.getItem('openai_api_key');
+        const savedAnthropicKey = localStorage.getItem('anthropic_api_key');
+        console.log('[OpalSettings] OPAL is ready, syncing saved API keys...');
+
+        if (savedOpenAIKey) {
           try {
-            await opal.callTool('update_openai_key', { apiKey: savedKey });
-            console.log('[OpalSettings] ✅ API key sent to OPAL server successfully');
+            await opal.callTool('update_openai_key', { apiKey: savedOpenAIKey });
+            console.log('[OpalSettings] ✅ OpenAI key synced to OPAL server');
           } catch (err) {
-            console.error('[OpalSettings] ❌ Failed to send API key to OPAL server:', err);
+            console.error('[OpalSettings] ❌ Failed to sync OpenAI key to OPAL server:', err);
           }
-        } else {
-          console.warn('[OpalSettings] ⚠️ No saved API key found in localStorage when OPAL became ready');
+        }
+
+        if (savedAnthropicKey) {
+          try {
+            await opal.callTool('update_anthropic_key', { apiKey: savedAnthropicKey });
+            console.log('[OpalSettings] ✅ Anthropic key synced to OPAL server');
+          } catch (err) {
+            console.error('[OpalSettings] ❌ Failed to sync Anthropic key to OPAL server:', err);
+          }
         }
       }
     };
@@ -818,6 +963,60 @@ export default function OpalSettings({ isOpen, onClose }) {
               Connect to OPAL first to test API connection.
             </div>
           )}
+        </CardContent>
+      </Card>
+      
+      {/* TERRAIN Data Import Card */}
+      <Card className="w-full mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            TERRAIN Data Import
+          </CardTitle>
+          <CardDescription>
+            Import behavioral health data from your TERRAIN mobile app
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="terrain-file">Select TERRAIN Export File</Label>
+            <Input
+              id="terrain-file"
+              type="file"
+              accept=".json"
+              onChange={handleTerrainFileSelect}
+              className="cursor-pointer"
+            />
+            <p className="text-xs text-gray-500">
+              Export your data from TERRAIN Settings → Export to Forge, then select the downloaded JSON file here.
+            </p>
+          </div>
+          
+          {terrainImportStatus && (
+            <Alert variant={terrainImportStatus.type === 'error' ? 'destructive' : 'default'}>
+              {terrainImportStatus.type === 'error' ? (
+                <AlertTriangle className="h-4 w-4" />
+              ) : (
+                <CheckCircle className="h-4 w-4" />
+              )}
+              <AlertDescription>{terrainImportStatus.message}</AlertDescription>
+            </Alert>
+          )}
+          
+          <Button
+            onClick={importTerrainData}
+            disabled={!terrainFile || terrainImporting}
+            className="w-full"
+          >
+            {terrainImporting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Importing...
+              </>
+            ) : (
+              'Import TERRAIN Data'
+            )}
+          </Button>
         </CardContent>
       </Card>
       

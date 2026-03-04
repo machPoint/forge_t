@@ -58,8 +58,9 @@ type JournalState = {
   moduleProgress: { [moduleId: string]: ModuleProgress };
   activeModuleId: string | null;
   isGeneratingFeedback: boolean;
+  isLoadingEntries: boolean;
   loadAllModuleProgress: () => Promise<void>;
-  fetchEntries: () => Promise<void>;
+  fetchEntries: (retryCount?: number) => Promise<void>;
   addEntry: (entry: Partial<JournalEntry>) => Promise<void>;
   createEntry: (entry: Partial<JournalEntry>) => Promise<JournalEntry>;
   updateEntry: (id: string, updates: Partial<JournalEntry>) => Promise<void>;
@@ -94,10 +95,11 @@ export const useJournal = create<JournalState>((set, get) => ({
   entries: [],
   selectedEntry: null,
   currentMode: "freeform",
-  activePersonaId: "supportive",
+  activePersonaId: "coach",
   moduleProgress: {},
   activeModuleId: null,
   isGeneratingFeedback: false,
+  isLoadingEntries: false,
 
   // Load all module progress on initialization
   loadAllModuleProgress: async () => {
@@ -121,12 +123,36 @@ export const useJournal = create<JournalState>((set, get) => ({
     }
   },
 
-  fetchEntries: async () => {
+  fetchEntries: async (retryCount = 0) => {
     try {
-      const token = TokenManager.getToken();
+      // Set loading state on first attempt
+      if (retryCount === 0) {
+        set({ isLoadingEntries: true });
+        console.log('[useJournal] Starting fetchEntries - attempt 1');
+      } else {
+        console.log(`[useJournal] Retrying fetchEntries - attempt ${retryCount + 1}/3`);
+      }
+      
+      let token = TokenManager.getToken();
       if (!token) {
-        console.warn("No authentication token available");
-        return;
+        // Startup race: auth state can hydrate slightly after page mount.
+        // Try authService fallback, then short bounded retries before giving up.
+        console.log('[useJournal] No token in TokenManager, checking authService');
+        token = authService.getAccessToken();
+        if (token) {
+          console.log('[useJournal] Token found in authService, setting in TokenManager');
+          TokenManager.setToken(token);
+        } else if (retryCount < 3) {
+          console.log(`[useJournal] No token yet, will retry in 300ms (attempt ${retryCount + 1}/3)`);
+          setTimeout(() => {
+            get().fetchEntries(retryCount + 1);
+          }, 300);
+          return;
+        } else {
+          console.warn('[useJournal] No authentication token available after retries, waiting for authService event');
+          set({ isLoadingEntries: false });
+          return;
+        }
       }
       
       const response = await fetch(`${getApiUrl()}`, {
@@ -143,15 +169,19 @@ export const useJournal = create<JournalState>((set, get) => ({
       
       const entries = await response.json();
       
+      console.log(`[useJournal] Successfully fetched ${entries.length} entries via API`);
+      
       // Auto-select the first entry if no entry is currently selected and entries exist
       set((state) => ({
         entries,
         selectedEntry: !state.selectedEntry && entries.length > 0 ? entries[0] : state.selectedEntry,
+        isLoadingEntries: false
       }));
       
-      console.log(`Fetched ${entries.length} entries via API`);
+      console.log(`[useJournal] Entries loaded and state updated`);
     } catch (error) {
-      console.error("Failed to fetch entries via API:", error);
+      console.error('[useJournal] Failed to fetch entries via API:', error);
+      set({ isLoadingEntries: false });
     }
   },
 

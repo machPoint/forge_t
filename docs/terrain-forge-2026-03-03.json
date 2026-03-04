@@ -1,0 +1,124 @@
+{
+  "terrain_version": 1,
+  "exported_at": "2026-03-03T04:15:47.866Z",
+  "fasting": {
+    "active_week": 1,
+    "summary": {
+      "total_logged": 1,
+      "completed_last_30_days": 0,
+      "modified_last_7_days": 1
+    },
+    "last_30_days": [
+      {
+        "date_key": "2026-03-02",
+        "fasting_window": "18:6",
+        "adhered": 0,
+        "adherence_note": "Window shifted — Carbs, window shift",
+        "protocol_week": 1
+      }
+    ]
+  },
+  "protocols": {
+    "today": null,
+    "last_7_days": [
+      {
+        "date": "2026-02-24",
+        "title": "Ask one person to do something together",
+        "status": "COMPLETED",
+        "xp_awarded": 25,
+        "quest_type": "SIGNAL_FIRE",
+        "difficulty": "MEDIUM"
+      },
+      {
+        "date": "2026-02-25",
+        "title": "Name the block to one person at work",
+        "status": "COMPLETED",
+        "xp_awarded": 50,
+        "quest_type": "SIGNAL_FIRE",
+        "difficulty": "HARD"
+      },
+      {
+        "date": "2026-02-26",
+        "title": "Name one block at work out loud",
+        "status": "COMPLETED",
+        "xp_awarded": 25,
+        "quest_type": "SIGNAL_FIRE",
+        "difficulty": "MEDIUM"
+      },
+      {
+        "date": "2026-02-27",
+        "title": "Make the specific ask out loud",
+        "status": "SKIPPED",
+        "xp_awarded": null,
+        "quest_type": "SIGNAL_FIRE",
+        "difficulty": "MEDIUM"
+      },
+      {
+        "date": "2026-02-28",
+        "title": "Call, don't text",
+        "status": "PENDING",
+        "xp_awarded": null,
+        "quest_type": "SIGNAL_FIRE",
+        "difficulty": "MEDIUM"
+      },
+      {
+        "date": "2026-03-01",
+        "title": "Call, Don't Text",
+        "status": "PENDING",
+        "xp_awarded": null,
+        "quest_type": "SIGNAL_FIRE",
+        "difficulty": "MEDIUM"
+      },
+      {
+        "date": "2026-03-02",
+        "title": "Name Three Things You're Avoiding",
+        "status": "COMPLETED",
+        "xp_awarded": 10,
+        "quest_type": "RECON",
+        "difficulty": "EASY"
+      }
+    ],
+    "active_chain": null
+  },
+  "reps": {
+    "last_7_days": [
+      {
+        "lane": "CUSTOM",
+        "finish_line": "Name Three Things You're Avoiding",
+        "prediction": "Quest: Open a note on your phone. Set a 3-minute timer. Write down three specific tasks or actions you've been putting off—one from work, one from home, one social. Not categories. Actual tasks with nouns and verbs. Screenshot the note.",
+        "reality": "Got Zad",
+        "completed": 1,
+        "duration_actual_sec": null
+      }
+    ]
+  },
+  "sentry": {
+    "last_14_days": [
+      {
+        "trigger_type": "BODY_SIGNAL",
+        "map_character": "MINIMIZER",
+        "intensity": 3,
+        "response": "NOTICED_AVOIDED",
+        "one_liner": "Shoulders up, tight just sitting there staring at a screen."
+      },
+      {
+        "trigger_type": "SELF_CRITICISM",
+        "map_character": "CRITIC",
+        "intensity": 3,
+        "response": "NOTICED_CONTINUED",
+        "one_liner": "Doom Looped. I got a meeting cancellation and something else and immediately doomed looped to I'm going to be fired."
+      }
+    ]
+  },
+  "accomplishments": {
+    "last_30_days": [
+      {
+        "title": "Quest: Name Three Things You're Avoiding",
+        "description": "Open a note on your phone. Set a 3-minute timer. Write down three specific tasks or actions you've been putting off—one from work, one from home, one social. Not categories. Actual tasks with nouns and verbs. Screenshot the note.",
+        "category": "QUEST",
+        "date": "2026-03-02"
+      }
+    ]
+  },
+  "notes": []
+}

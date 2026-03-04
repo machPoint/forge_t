@@ -6,8 +6,11 @@
 
 const toolCreator = require('../utils/toolCreator');
 const logger = require('../logger');
-const promptsService = require('../services/promptsService');
+const journalService = require('../services/journalService');
+const { getAIFeedback, getAIInsights } = require('../services/promptsService');
+const { getFallbackModel } = require('../services/modelRegistry');
 const identityProfileService = require('../services/identityProfileService');
+const { getApiKey, setApiKey } = require('../services/aiConfigService');
 
 /**
  * Register journal tools
@@ -44,17 +47,7 @@ function registerJournalTools(configs, wss) {
               throw new Error('Invalid OpenAI API key format');
             }
             
-            // Update the environment variable
-            process.env.OPENAI_API_KEY = apiKey;
-            
-            // Also update the ConfigLoader's cached key
-            try {
-              const configLoader = require('../config-loader');
-              configLoader.setOpenAIApiKey(apiKey);
-              logger.info('OpenAI API key updated in ConfigLoader cache');
-            } catch (e) {
-              logger.warn('Could not update ConfigLoader cache:', e.message);
-            }
+            setApiKey('openai', apiKey);
             
             logger.info(`OpenAI API key updated in environment: ${apiKey.substring(0, 7)}...`);
             
@@ -99,19 +92,7 @@ function registerJournalTools(configs, wss) {
               throw new Error('Invalid Anthropic API key format');
             }
             
-            // Update the environment variable
-            process.env.ANTHROPIC_API_KEY = apiKey;
-            
-            // Also update the ConfigLoader's cached key if it has that method
-            try {
-              const configLoader = require('../config-loader');
-              if (configLoader.setAnthropicApiKey) {
-                configLoader.setAnthropicApiKey(apiKey);
-                logger.info('Anthropic API key updated in ConfigLoader cache');
-              }
-            } catch (e) {
-              logger.warn('Could not update ConfigLoader cache:', e.message);
-            }
+            setApiKey('anthropic', apiKey);
             
             logger.info(`Anthropic API key updated in environment: ${apiKey.substring(0, 10)}...`);
             
@@ -142,7 +123,7 @@ function registerJournalTools(configs, wss) {
       _internal: {
         processor: async () => {
           try {
-            const apiKey = process.env.ANTHROPIC_API_KEY;
+            const apiKey = getApiKey('anthropic');
             
             if (!apiKey) {
               return {
@@ -155,9 +136,13 @@ function registerJournalTools(configs, wss) {
             const Anthropic = require('@anthropic-ai/sdk');
             const anthropic = new Anthropic({ apiKey });
             
+            // Use centralized model resolution for test
+            const testModel = getFallbackModel('anthropic');
+            logger.info(`[test_anthropic_connection] Using test model: ${testModel}`);
+            
             // Make a minimal test request
             const message = await anthropic.messages.create({
-              model: 'claude-3-5-haiku-20241022',
+              model: testModel,
               max_tokens: 10,
               messages: [{ role: 'user', content: 'Hi' }]
             });
@@ -170,9 +155,16 @@ function registerJournalTools(configs, wss) {
             };
           } catch (error) {
             logger.error('Anthropic API connection test failed:', error);
+
+            const rawMessage = error?.message || 'Failed to connect to Anthropic API';
+            const modelHint =
+              rawMessage.includes('not_found_error') || rawMessage.includes('deprecated')
+                ? ' The configured test model is unavailable/deprecated. Please use a current Claude 4.5/4.6 model.'
+                : '';
+
             return {
               success: false,
-              error: error.message || 'Failed to connect to Anthropic API'
+              error: `${rawMessage}${modelHint}`
             };
           }
         }
@@ -281,8 +273,8 @@ function registerJournalTools(configs, wss) {
               finalModel: params.model || 'gpt-4o'
             });
             
-            // Call the promptsService to get AI feedback
-            const feedback = await promptsService.getAIFeedback(
+            // Call prompts service function directly
+            const feedback = await getAIFeedback(
               params.content,
               params.persona,
               identityProfile,
@@ -333,8 +325,8 @@ function registerJournalTools(configs, wss) {
           });
           
           try {
-            // Call the promptsService to get AI insights with identity profile
-            const insights = await promptsService.getAIInsights(
+            // Call prompts service function directly
+            const insights = await getAIInsights(
               params.memoriesContext,
               params.systemPrompt,
               identityProfile,
@@ -371,7 +363,7 @@ function registerJournalTools(configs, wss) {
           
           try {
             // Get API key from environment
-            const apiKey = process.env.OPENAI_API_KEY;
+            const apiKey = getApiKey('openai');
             
             if (!apiKey) {
               const error = 'OpenAI API key not found in environment variables';
@@ -470,20 +462,7 @@ function registerJournalTools(configs, wss) {
           logger.info('[list_openai_models] Fetching available models from OpenAI');
           
           try {
-            // Try multiple sources for API key (same as promptsService)
-            let apiKey = process.env.OPENAI_API_KEY || 
-                         process.env.OPENAI_KEY || 
-                         process.env.API_KEY_OPENAI;
-            
-            // Fallback to config-loader
-            if (!apiKey) {
-              try {
-                const configLoader = require('../config-loader');
-                apiKey = configLoader.getOpenAIApiKey();
-              } catch (e) {
-                logger.warn('[list_openai_models] Config loader fallback failed:', e.message);
-              }
-            }
+            const apiKey = getApiKey('openai');
             
             if (!apiKey) {
               return {

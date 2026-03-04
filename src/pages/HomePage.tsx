@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import NotesCard from "@/components/NotesCard";
 import Spinner from "@/components/ui/spinner";
 import { useModules } from "@/hooks/useModules";
+import authService from "@/lib/auth-service";
 
 // Memory interface for type safety
 interface Memory {
@@ -33,6 +34,24 @@ const HomePage: React.FC = () => {
   // Fetch entries when the home page loads
   React.useEffect(() => {
     fetchEntries();
+  }, [fetchEntries]);
+
+  // Listen for auth token updates and refetch entries when token becomes available
+  React.useEffect(() => {
+    const handleTokenUpdate = (token: string) => {
+      if (token) {
+        console.log('[HomePage] Token update detected, refetching entries');
+        fetchEntries();
+      }
+    };
+
+    authService.on('tokenUpdate', handleTokenUpdate);
+    authService.on('login', handleTokenUpdate);
+
+    return () => {
+      authService.off('tokenUpdate', handleTokenUpdate);
+      authService.off('login', handleTokenUpdate);
+    };
   }, [fetchEntries]);
 
   // Writing prompts pool - 20 varied therapeutic prompts
@@ -149,8 +168,18 @@ const HomePage: React.FC = () => {
 
   const generateAIPrompts = async () => {
     if (!opal.ready()) {
-      toast.error("AI service not available");
-      return;
+      try {
+        await opal.waitForReady(10000);
+      } catch (_) {
+        try {
+          await opal.connect();
+          await opal.waitForReady(15000);
+        } catch (connectionError) {
+          console.error('[HomePage] Failed to connect OPAL for prompt generation:', connectionError);
+          toast.error("AI service not available");
+          return;
+        }
+      }
     }
 
     setIsGeneratingPrompts(true);

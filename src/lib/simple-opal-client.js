@@ -93,6 +93,15 @@ class SimpleOPALClient {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.reconnectInterval = null;
+    this.aiToolNames = new Set([
+      'get_ai_feedback',
+      'get_ai_insights',
+      'update_openai_key',
+      'update_anthropic_key',
+      'test_openai_connection',
+      'test_anthropic_connection',
+      'list_openai_models'
+    ]);
 
     // Auto-initialize from stored token
     this.initFromStorage();
@@ -339,6 +348,7 @@ class SimpleOPALClient {
           try {
             console.log('[OPAL] Starting MCP initialization...');
             await this.initialize();
+            await this.syncStoredAIKeysToServer();
             console.log('[OPAL] MCP initialization completed');
             this.isReady = true;
             this.emit('statusChange', 'ready');
@@ -423,13 +433,61 @@ class SimpleOPALClient {
     }
   }
 
+  isAITool(name) {
+    return this.aiToolNames.has(name) || name.includes('ai_');
+  }
+
+  async syncStoredAIKeysToServer() {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const openaiApiKey = localStorage.getItem('openai_api_key')?.trim();
+    const anthropicApiKey = localStorage.getItem('anthropic_api_key')?.trim();
+    const toolNames = new Set((this.tools || []).map(tool => tool.name));
+
+    const updates = [];
+    if (openaiApiKey && toolNames.has('update_openai_key')) {
+      updates.push({ name: 'update_openai_key', apiKey: openaiApiKey });
+    }
+    if (anthropicApiKey && toolNames.has('update_anthropic_key')) {
+      updates.push({ name: 'update_anthropic_key', apiKey: anthropicApiKey });
+    }
+
+    for (const update of updates) {
+      try {
+        await this.sendRequest({
+          jsonrpc: '2.0',
+          id: this.requestId++,
+          method: 'tools/call',
+          params: {
+            name: update.name,
+            arguments: { apiKey: update.apiKey }
+          }
+        }, 15000);
+      } catch (error) {
+        console.warn(`[OPAL] Failed to sync stored API key with tool ${update.name}:`, error.message || error);
+      }
+    }
+  }
+
   // Call a tool
   async callTool(name, args = {}) {
+    if (!this.isReady) {
+      try {
+        await this.waitForReady(10000);
+      } catch (_) {
+        if (this.token && !this.isConnected) {
+          await this.connect();
+        }
+      }
+    }
+
     if (!this.isReady) {
       throw new Error('OPAL connection not ready');
     }
 
-    const result = await this.sendRequest({
+    const request = () => this.sendRequest({
       jsonrpc: '2.0',
       id: this.requestId++,
       method: 'tools/call',
@@ -438,6 +496,23 @@ class SimpleOPALClient {
         arguments: args
       }
     });
+
+    let result;
+    try {
+      result = await request();
+    } catch (error) {
+      const message = error?.message || '';
+      const isTransient = /connection|timeout|not open|closed/i.test(message);
+      if (!this.isAITool(name) || !isTransient || !this.token) {
+        throw error;
+      }
+
+      console.warn(`[OPAL] Retrying AI tool "${name}" after transient error:`, message);
+      await this.connect();
+      await this.waitForReady(15000);
+      await this.syncStoredAIKeysToServer();
+      result = await request();
+    }
 
     this.emit('toolCall', { name, args, result });
     
@@ -469,12 +544,12 @@ class SimpleOPALClient {
 
     console.log('[OPAL] Sending request:', JSON.stringify(request, null, 2));
 
-    // Use longer timeout for AI-related calls (2 minutes), default 30s for others
+    // Use longer timeout for AI-related calls (4 minutes), default 30s for others
     const isAICall = request.params?.name?.includes('ai_') || 
                      request.params?.name?.includes('get_ai_') ||
                      request.params?.name === 'get_ai_feedback' ||
                      request.params?.name === 'get_ai_insights';
-    const timeoutMs = customTimeout || (isAICall ? 120000 : 30000);
+    const timeoutMs = customTimeout || (isAICall ? 240000 : 30000);
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {

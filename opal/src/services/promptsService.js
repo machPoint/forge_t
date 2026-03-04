@@ -6,6 +6,9 @@
 const logger = require('../logger');
 const { sendNotificationToAll } = require('../utils/notifications');
 const crypto = require('crypto');
+const { resolveModel } = require('./modelRegistry');
+const { fetchWithTimeoutAndRetry } = require('../utils/retryWithBackoff');
+const { getProviderFromModel, getApiKeyOrThrow } = require('./aiConfigService');
 
 /**
  * Normalize profile data to ensure consistent field naming
@@ -346,46 +349,11 @@ function listPrompts(paginateItems, cursor = null) {
  * @param {string} model - The OpenAI model to use (default: gpt-4o)
  * @returns {Promise<string>} The AI-generated feedback
  */
-async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserId = 'default', model = 'gpt-4o') {
-  // Detect provider based on model name
-  const isAnthropicModel = model && (model.startsWith('claude-') || model.includes('claude'));
-  
-  // Get the appropriate API key
-  let apiKey;
-  if (isAnthropicModel) {
-    apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      logger.error('[PromptsService] ANTHROPIC_API_KEY not found in environment');
-      throw new Error('Anthropic API key not configured on the server. Please configure it in Settings.');
-    }
-    logger.info('[PromptsService] Anthropic API key successfully loaded for AI Feedback');
-  } else {
-    // Try multiple environment variable names and fallback methods for OpenAI
-    apiKey = process.env.OPENAI_API_KEY || 
-             process.env.OPENAI_KEY || 
-             process.env.API_KEY_OPENAI;
-    
-    // If still no API key, try loading from config-loader as fallback
-    if (!apiKey) {
-      try {
-        const configLoader = require('../config-loader');
-        apiKey = configLoader.getOpenAIApiKey();
-        if (apiKey) {
-          logger.info('[PromptsService] Retrieved OpenAI API key from config loader fallback');
-        }
-      } catch (error) {
-        logger.warn('[PromptsService] Config loader fallback failed:', error.message);
-      }
-    }
-    
-    if (!apiKey) {
-      logger.error('[PromptsService] OPENAI_API_KEY not found in any environment variable or config');
-      logger.error('[PromptsService] Checked: OPENAI_API_KEY, OPENAI_KEY, API_KEY_OPENAI');
-      throw new Error('OpenAI API key not configured on the server. Please check your .env file.');
-    }
-    
-    logger.info('[PromptsService] OpenAI API key successfully loaded for AI Feedback');
-  }
+async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserId = 'default', model = 'gpt-4o', userId = 'admin') {
+  const provider = getProviderFromModel(model);
+  const isAnthropicModel = provider === 'anthropic';
+  const apiKey = getApiKeyOrThrow(provider, 'AI feedback');
+  logger.info(`[PromptsService] ${provider} API key loaded for AI Feedback`);
   
   // Import the identityProfileService
   const { getIdentityProfile } = require('./identityProfileService');
@@ -528,22 +496,35 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
     // Continue without the profile data if there's an error
   }
 
-  // DEBUG: Log the model being used
-  console.log('[PromptsService] DEBUG - Model info:', {
-    modelParam: model,
-    modelType: typeof model,
-    modelLength: model ? model.length : 'null',
-    modelTrimmed: model ? model.trim() : 'null'
-  });
+  // Fetch and append TERRAIN behavioral context if available
+  let terrainContext = '';
+  try {
+    const terrainService = require('./terrainService');
+    const latestSnapshot = await terrainService.getLatestSnapshot(userId);
+    if (latestSnapshot && latestSnapshot.snapshot) {
+      terrainContext = terrainService.buildTerrainContext(latestSnapshot.snapshot);
+      console.log('[PromptsService] Added TERRAIN context for AI feedback:', terrainContext.length, 'characters');
+    }
+  } catch (error) {
+    logger.warn('[PromptsService] Could not fetch TERRAIN context for AI feedback:', error.message);
+  }
 
-  // Use the model as-is (dynamically fetched from OpenAI API)
-  // Only provide a fallback if no model is specified
-  let validatedModel = model;
-  if (!model || model.trim() === '') {
-    validatedModel = 'gpt-4o'; // Default fallback
-    console.log('[PromptsService] No model specified, using default:', validatedModel);
-  } else {
-    console.log('[PromptsService] Using requested model:', validatedModel);
+  // Use centralized model resolution
+  const modelResolution = resolveModel(model, isAnthropicModel ? 'anthropic' : 'openai');
+  const validatedModel = modelResolution.model;
+  
+  // Log model resolution details
+  console.log('[PromptsService] Model resolution:', {
+    requested: model,
+    resolved: validatedModel,
+    provider: modelResolution.provider,
+    status: modelResolution.status,
+    reason: modelResolution.reason
+  });
+  
+  // Warn user if model was changed
+  if (modelResolution.status === 'fallback' && modelResolution.message) {
+    logger.warn(`[PromptsService] ${modelResolution.message}`);
   }
 
   // ENHANCED: Add profile context validation before sending to OpenAI
@@ -589,6 +570,8 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
       { role: 'system', content: personaPrompt },
       // Add profile context as a system message if available
       ...(profileContext ? [{ role: 'system', content: profileContext }] : []),
+      // Add TERRAIN behavioral context if available
+      ...(terrainContext ? [{ role: 'system', content: `TERRAIN BEHAVIORAL CONTEXT: The user tracks their behavioral health in a companion mobile app. Use this data to provide contextual, pattern-aware feedback. Reference specific behaviors, triggers, or frameworks when relevant:\n\n${terrainContext}` }] : []),
       { role: 'user', content: entryContent }
     ],
     ...(supportsTemperature ? { temperature: 0.8 } : {}),
@@ -629,15 +612,20 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
         ]
       };
       
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
+      const response = await fetchWithTimeoutAndRetry(
+        'https://api.anthropic.com/v1/messages',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify(anthropicBody)
         },
-        body: JSON.stringify(anthropicBody)
-      });
+        45000, // 45 second timeout
+        { maxAttempts: 3 } // Retry config
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -662,14 +650,19 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
       console.log('[PromptsService] Making OpenAI API request with model:', validatedModel);
       console.log('[PromptsService] API key preview:', apiKey.substring(0, 10) + '...');
       
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+      const response = await fetchWithTimeoutAndRetry(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(body)
         },
-        body: JSON.stringify(body)
-      });
+        45000, // 45 second timeout
+        { maxAttempts: 3 } // Retry config
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -708,32 +701,11 @@ async function getAIFeedback(entryContent, personaPrompt, identityProfileOrUserI
  */
 async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUserId = 'default', model = 'gpt-4o-2024-08-06') {
   logger.info('[PromptsService] Getting AI insights');
-  
-  // Try multiple environment variable names and fallback methods
-  let apiKey = process.env.OPENAI_API_KEY || 
-               process.env.OPENAI_KEY || 
-               process.env.API_KEY_OPENAI;
-  
-  // If still no API key, try loading from config-loader as fallback
-  if (!apiKey) {
-    try {
-      const configLoader = require('../config-loader');
-      apiKey = configLoader.getOpenAIApiKey();
-      if (apiKey) {
-        logger.info('[PromptsService] Retrieved OpenAI API key from config loader fallback for AI Insights');
-      }
-    } catch (error) {
-      logger.warn('[PromptsService] Config loader fallback failed for AI Insights:', error.message);
-    }
-  }
-  
-  if (!apiKey) {
-    logger.error('[PromptsService] OpenAI API key not configured for AI Insights');
-    logger.error('[PromptsService] Checked: OPENAI_API_KEY, OPENAI_KEY, API_KEY_OPENAI');
-    throw new Error('AI insights service error: OpenAI API key not configured on the server. Please check your .env file.');
-  }
-  
-  logger.info('[PromptsService] OpenAI API key successfully loaded for AI Insights');
+
+  const provider = getProviderFromModel(model);
+  const isAnthropicModel = provider === 'anthropic';
+  const apiKey = getApiKeyOrThrow(provider, 'AI insights');
+  logger.info(`[PromptsService] ${provider} API key loaded for AI Insights`);
 
   // Import the identityProfileService
   const { getIdentityProfile } = require('./identityProfileService');
@@ -857,22 +829,35 @@ async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUse
     profileContext = '';
   }
 
-  // DEBUG: Log the model being used for AI Insights
-  console.log('[PromptsService] DEBUG - AI Insights Model info:', {
-    modelParam: model,
-    modelType: typeof model,
-    modelLength: model ? model.length : 'null',
-    modelTrimmed: model ? model.trim() : 'null'
-  });
+  // Fetch and append TERRAIN behavioral context if available
+  let terrainContext = '';
+  try {
+    const terrainService = require('./terrainService');
+    const latestSnapshot = await terrainService.getLatestSnapshot(identityProfileOrUserId || 'admin');
+    if (latestSnapshot && latestSnapshot.snapshot) {
+      terrainContext = terrainService.buildTerrainContext(latestSnapshot.snapshot);
+      console.log('[PromptsService] Added TERRAIN context for AI insights:', terrainContext.length, 'characters');
+    }
+  } catch (error) {
+    logger.warn('[PromptsService] Could not fetch TERRAIN context for AI insights:', error.message);
+  }
 
-  // Use the model as-is (dynamically fetched from OpenAI API)
-  // Only provide a fallback if no model is specified
-  let validatedModel = model;
-  if (!model || model.trim() === '') {
-    validatedModel = 'gpt-4o'; // Default fallback
-    console.log('[PromptsService] No model specified for AI Insights, using default:', validatedModel);
-  } else {
-    console.log('[PromptsService] Using requested model for AI Insights:', validatedModel);
+  // Use centralized model resolution for AI Insights
+  const modelResolution = resolveModel(model, isAnthropicModel ? 'anthropic' : 'openai');
+  const validatedModel = modelResolution.model;
+  
+  // Log model resolution details
+  console.log('[PromptsService] AI Insights model resolution:', {
+    requested: model,
+    resolved: validatedModel,
+    provider: modelResolution.provider,
+    status: modelResolution.status,
+    reason: modelResolution.reason
+  });
+  
+  // Warn user if model was changed
+  if (modelResolution.status === 'fallback' && modelResolution.message) {
+    logger.warn(`[PromptsService] ${modelResolution.message}`);
   }
 
   // Determine which token parameter to use based on model
@@ -908,6 +893,8 @@ async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUse
       { role: 'system', content: systemPrompt },
       // Add profile context as a system message if available for more personalized insights
       ...(profileContext ? [{ role: 'system', content: `IMPORTANT: Use this user profile information to provide highly personalized and psychologically-informed insights:\n\n${profileContext}` }] : []),
+      // Add TERRAIN behavioral context if available
+      ...(terrainContext ? [{ role: 'system', content: `TERRAIN BEHAVIORAL CONTEXT: The user tracks their behavioral health in a companion mobile app. Use this data to provide contextual, pattern-aware insights. Reference specific behaviors, triggers, or frameworks when relevant:\n\n${terrainContext}` }] : []),
       { role: 'user', content: memoriesContext }
     ],
     ...(supportsTemperature ? { temperature: 0.6 } : {}),
@@ -915,7 +902,7 @@ async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUse
   };
   
   // Log the request (but mask any personal data)
-  logger.debug(`[PromptsService] Sending ${body.messages.length} messages to OpenAI for insights`);
+  logger.debug(`[PromptsService] Sending ${body.messages.length} messages to ${isAnthropicModel ? 'Anthropic' : 'OpenAI'} for insights`);
   console.log('[PromptsService] AI Insights request body:', {
     model: body.model,
     messageCount: body.messages.length,
@@ -925,61 +912,108 @@ async function getAIInsights(memoriesContext, systemPrompt, identityProfileOrUse
   });
 
   try {
-    const fetch = (await import('node-fetch')).default;
-    
-    console.log('[PromptsService] Making OpenAI API request for insights with model:', validatedModel);
-    console.log('[PromptsService] API key preview for insights:', apiKey.substring(0, 10) + '...');
-    
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
-
-    console.log('[PromptsService] OpenAI insights response status:', response.status);
-    
-    // Get the raw response text first to debug
-    const responseText = await response.text();
-    console.log('[PromptsService] 🔥 Raw response text (first 1000 chars):', responseText.substring(0, 1000));
-
-    if (!response.ok) {
-      console.error('[PromptsService] OpenAI API error for insights:', response.status, responseText);
-      logger.error(`OpenAI API error for insights: ${response.status} ${responseText}`);
-      throw new Error(`OpenAI API error for insights: ${response.status} - ${responseText}`);
-    }
-
-    const data = JSON.parse(responseText);
-    
-    console.log('[PromptsService] 🔥 Raw OpenAI response keys:', Object.keys(data));
-    console.log('[PromptsService] 🔥 Raw OpenAI response:', JSON.stringify(data, null, 2).substring(0, 2000));
-    
-    // Handle different response formats from various OpenAI models
     let insightsText = null;
-    
-    // Standard format: data.choices[0].message.content
-    if (data.choices?.[0]?.message?.content) {
-      insightsText = data.choices[0].message.content.trim();
-      console.log('[PromptsService] 🔥 Found content in standard format');
-    }
-    // Some newer models might use output_text or other fields
-    else if (data.output_text) {
-      insightsText = data.output_text.trim();
-      console.log('[PromptsService] 🔥 Found content in output_text format');
-    }
-    // Check for output array format
-    else if (data.output?.[0]?.content?.[0]?.text) {
-      insightsText = data.output[0].content[0].text.trim();
-      console.log('[PromptsService] 🔥 Found content in output array format');
+
+    if (isAnthropicModel) {
+      console.log('[PromptsService] Making Anthropic API request for insights with model:', validatedModel);
+      console.log('[PromptsService] API key preview for insights:', apiKey.substring(0, 10) + '...');
+
+      const systemMessages = body.messages.filter(m => m.role === 'system').map(m => m.content).join('\n\n');
+      const userMessage = body.messages.find(m => m.role === 'user')?.content || memoriesContext;
+
+      const anthropicBody = {
+        model: validatedModel,
+        max_tokens: 1200,
+        system: systemMessages,
+        messages: [
+          { role: 'user', content: userMessage }
+        ]
+      };
+
+      const response = await fetchWithTimeoutAndRetry(
+        'https://api.anthropic.com/v1/messages',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify(anthropicBody)
+        },
+        45000,
+        { maxAttempts: 3 }
+      );
+
+      const responseText = await response.text();
+      console.log('[PromptsService] Anthropic insights response status:', response.status);
+
+      if (!response.ok) {
+        console.error('[PromptsService] Anthropic API error for insights:', response.status, responseText);
+        logger.error(`Anthropic API error for insights: ${response.status} ${responseText}`);
+        throw new Error(`Anthropic API error for insights: ${response.status} - ${responseText}`);
+      }
+
+      const data = JSON.parse(responseText);
+      insightsText = data.content?.[0]?.text?.trim() || null;
+    } else {
+      console.log('[PromptsService] Making OpenAI API request for insights with model:', validatedModel);
+      console.log('[PromptsService] API key preview for insights:', apiKey.substring(0, 10) + '...');
+      
+      const response = await fetchWithTimeoutAndRetry(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(body)
+        },
+        45000, // 45 second timeout
+        { maxAttempts: 3 } // Retry config
+      );
+
+      console.log('[PromptsService] OpenAI insights response status:', response.status);
+      
+      // Get the raw response text first to debug
+      const responseText = await response.text();
+      console.log('[PromptsService] 🔥 Raw response text (first 1000 chars):', responseText.substring(0, 1000));
+
+      if (!response.ok) {
+        console.error('[PromptsService] OpenAI API error for insights:', response.status, responseText);
+        logger.error(`OpenAI API error for insights: ${response.status} ${responseText}`);
+        throw new Error(`OpenAI API error for insights: ${response.status} - ${responseText}`);
+      }
+
+      const data = JSON.parse(responseText);
+      
+      console.log('[PromptsService] 🔥 Raw OpenAI response keys:', Object.keys(data));
+      console.log('[PromptsService] 🔥 Raw OpenAI response:', JSON.stringify(data, null, 2).substring(0, 2000));
+      
+      // Handle different response formats from various OpenAI models
+      // Standard format: data.choices[0].message.content
+      if (data.choices?.[0]?.message?.content) {
+        insightsText = data.choices[0].message.content.trim();
+        console.log('[PromptsService] 🔥 Found content in standard format');
+      }
+      // Some newer models might use output_text or other fields
+      else if (data.output_text) {
+        insightsText = data.output_text.trim();
+        console.log('[PromptsService] 🔥 Found content in output_text format');
+      }
+      // Check for output array format
+      else if (data.output?.[0]?.content?.[0]?.text) {
+        insightsText = data.output[0].content[0].text.trim();
+        console.log('[PromptsService] 🔥 Found content in output array format');
+      }
     }
     
     console.log('[PromptsService] 🔥 Extracted insights text:', insightsText ? insightsText.substring(0, 500) : 'null');
     
     if (!insightsText) {
-      console.log('[PromptsService] 🔥 No insights text found in response. Full response:', JSON.stringify(data));
-      throw new Error('No insights returned from OpenAI.');
+      console.log('[PromptsService] 🔥 No insights text found in AI response');
+      throw new Error(`No insights returned from ${isAnthropicModel ? 'Anthropic' : 'OpenAI'}.`);
     }
     
     // Try to parse the response as JSON first, fallback to plain text

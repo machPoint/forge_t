@@ -8,19 +8,7 @@ const db = require('../config/database');
 const logger = require('../logger');
 const { v4: uuidv4 } = require('uuid');
 const { toSnakeCase, toCamelCase } = require('../utils/caseConverter');
-
-// Log OpenAI API key status
-const openaiApiKey = process.env.OPENAI_API_KEY || 'sk-your-key-here';
-logger.info('OpenAI API Key status:', { 
-  exists: !!process.env.OPENAI_API_KEY,
-  length: openaiApiKey.length,
-  preview: openaiApiKey.substring(0, 7) + '...'
-});
-
-// Initialize OpenAI client for embeddings
-const openai = new OpenAI({
-  apiKey: openaiApiKey
-});
+const { getApiKey } = require('./aiConfigService');
 
 /**
  * Generate embeddings for text using OpenAI's API
@@ -29,6 +17,13 @@ const openai = new OpenAI({
  */
 async function generateEmbedding(text) {
   try {
+    const openaiApiKey = getApiKey('openai');
+    if (!openaiApiKey) {
+      logger.warn('OpenAI API key not configured for embeddings. Using fallback random embedding.');
+      return Array(1536).fill().map(() => Math.random() * 2 - 1);
+    }
+
+    const openai = new OpenAI({ apiKey: openaiApiKey });
     const response = await openai.embeddings.create({
       model: "text-embedding-ada-002",
       input: text,

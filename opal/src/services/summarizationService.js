@@ -5,11 +5,7 @@
 
 const logger = require('../logger');
 const axios = require('axios');
-
-// Load OpenAI config from environment
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
-const OPENAI_API_URL = process.env.OPENAI_API_URL || 'https://api.openai.com/v1/chat/completions';
+const { getApiKey } = require('./aiConfigService');
 
 
 /**
@@ -21,7 +17,11 @@ const OPENAI_API_URL = process.env.OPENAI_API_URL || 'https://api.openai.com/v1/
 async function summarizeContent(content, type = 'headline') {
   try {
     logger.info(`Summarizing content with type: ${type}`);
-    if (OPENAI_API_KEY) {
+    const openaiApiKey = getApiKey('openai');
+    const openaiModel = process.env.OPENAI_MODEL || 'gpt-4o';
+    const openaiApiUrl = process.env.OPENAI_API_URL || 'https://api.openai.com/v1/chat/completions';
+
+    if (openaiApiKey) {
       // Choose prompt based on summary type
       let prompt;
       if (type === 'headline') {
@@ -38,26 +38,26 @@ async function summarizeContent(content, type = 'headline') {
       ];
       
       // Some newer models (like gpt-5) don't support custom temperature
-      const supportsTemperature = !OPENAI_MODEL.startsWith('gpt-5') && !OPENAI_MODEL.includes('o1-') && !OPENAI_MODEL.includes('o3-');
+      const supportsTemperature = !openaiModel.startsWith('gpt-5') && !openaiModel.includes('o1-') && !openaiModel.includes('o3-');
       
       const response = await axios.post(
-        OPENAI_API_URL,
+        openaiApiUrl,
         {
-          model: OPENAI_MODEL,
+          model: openaiModel,
           messages,
           ...(supportsTemperature ? { temperature: 0.3 } : {}),
           max_tokens: type === 'headline' ? 32 : (type === 'paragraph' ? 128 : 512)
         },
         {
           headers: {
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            'Authorization': `Bearer ${openaiApiKey}`,
             'Content-Type': 'application/json'
           }
         }
       );
       const summary = response.data.choices[0].message.content.trim();
       const tokens_used = response.data.usage?.total_tokens || 0;
-      const cost = calculateCost(tokens_used, OPENAI_MODEL);
+      const cost = calculateCost(tokens_used, openaiModel);
       return {
         summary,
         tokens_used,

@@ -267,6 +267,67 @@ fn load_openai_key_from_config(app: &tauri::AppHandle) -> Result<String, String>
     Ok(String::new())
 }
 
+// Load Anthropic API key from persistent config or .env file
+fn load_anthropic_key_from_config(app: &tauri::AppHandle) -> Result<String, String> {
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+
+    // First, check the persistent config file (saved via UI)
+    let config_file = app_data_dir.join("anthropic_config.json");
+    println!("🔍 Checking for Anthropic API key at: {:?}", config_file);
+
+    if config_file.exists() {
+        println!("✅ Anthropic config file exists, reading...");
+        if let Ok(content) = fs::read_to_string(&config_file) {
+            if let Ok(config) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(api_key) = config.get("api_key").and_then(|v| v.as_str()) {
+                    if !api_key.is_empty() {
+                        println!("✅ Loaded Anthropic API key from persistent config: {}...", &api_key[..10.min(api_key.len())]);
+                        return Ok(api_key.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback: Try multiple .env file locations
+    let mut env_paths = vec![app_data_dir.join(".env")];
+
+    if let Some(parent) = app_data_dir.parent() {
+        env_paths.push(parent.join(".env"));
+        env_paths.push(parent.join("opal").join(".env"));
+    }
+
+    // In development, also check the project opal folder
+    if cfg!(debug_assertions) {
+        env_paths.push(PathBuf::from("..").join("opal").join(".env"));
+        env_paths.push(PathBuf::from("..").join(".env"));
+    }
+
+    for env_path in env_paths {
+        if env_path.exists() {
+            if let Ok(content) = fs::read_to_string(&env_path) {
+                for line in content.lines() {
+                    let trimmed = line.trim();
+                    if trimmed.starts_with("ANTHROPIC_API_KEY=") {
+                        let key = trimmed.trim_start_matches("ANTHROPIC_API_KEY=")
+                            .trim_matches('"')
+                            .trim_matches('\'')
+                            .to_string();
+                        if !key.is_empty() {
+                            println!("✅ Found Anthropic API key in .env");
+                            return Ok(key);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    println!("⚠️ No Anthropic API key found in config or .env files");
+    Ok(String::new())
+}
+
 // Spawn OPAL server process
 async fn spawn_opal_server(
     app: &tauri::AppHandle,
@@ -279,6 +340,7 @@ async fn spawn_opal_server(
     
     // Load OpenAI API key
     let openai_api_key = load_openai_key_from_config(app).unwrap_or_default();
+    let anthropic_api_key = load_anthropic_key_from_config(app).unwrap_or_default();
     
     // Determine OPAL server path
     let is_dev = cfg!(debug_assertions);
@@ -325,6 +387,7 @@ async fn spawn_opal_server(
         .env("VITE_OPAL_API_URL", format!("http://localhost:{}/api", port))
         .env("OPAL_MODE", "persistent")
         .env("OPENAI_API_KEY", &openai_api_key)
+        .env("ANTHROPIC_API_KEY", &anthropic_api_key)
         .env("MACHPOINT_MODE", "persistent")
         .env("JWT_SECRET", "forge-desktop-jwt-secret-key-2024")
         .env("JWT_ACCESS_EXPIRY", "24h")

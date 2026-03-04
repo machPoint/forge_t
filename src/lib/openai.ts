@@ -31,6 +31,22 @@ type ExtendedProfile = IdentityProfile & {
   personality_profile: PersonalityProfile;
 };
 
+async function ensureOpalReady(): Promise<void> {
+  if (opal.ready()) {
+    return;
+  }
+
+  try {
+    await opal.waitForReady(10000);
+    return;
+  } catch (_) {
+    // Fall through to explicit reconnect attempt.
+  }
+
+  await opal.connect();
+  await opal.waitForReady(15000);
+}
+
 /**
  * Gets AI feedback by calling the backend tool
  * @param {string} entryContent The content to get feedback on
@@ -46,9 +62,7 @@ type ExtendedProfile = IdentityProfile & {
  * @returns {Promise<string>} The AI-generated feedback
  */
 export async function getAIFeedback(entryContent: string, personaPrompt: string, identityProfile?: IdentityProfile): Promise<string> {
-  if (!opal.ready()) {
-    throw new Error('OPAL server is not connected.');
-  }
+  await ensureOpalReady();
 
   try {
     // Get the selected model
@@ -162,9 +176,7 @@ export async function getAIFeedback(entryContent: string, personaPrompt: string,
  * @returns {Promise<Array<{id: string, type: string, title: string, description: string, confidence: number, relatedTags: string[]}>>} Array of AI-generated insights
  */
 export async function getAIInsights(memoriesContext: string, systemPrompt: string): Promise<Array<{id: string, type: string, title: string, description: string, confidence: number, relatedTags: string[]}>> {
-  if (!opal.ready()) {
-    throw new Error('OPAL server is not connected.');
-  }
+  await ensureOpalReady();
 
   try {
     // Get the selected model

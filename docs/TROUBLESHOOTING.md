@@ -4,324 +4,175 @@
 
 ### 1. Port 3000 Already in Use
 
-**Error Message:**
-```
-Error: listen EADDRINUSE: address already in use :::3000
-```
+**Symptoms**
 
-**Cause:** Another instance of the OPAL server (or another application) is already running on port 3000.
+- OPAL fails to start
+- Errors like `EADDRINUSE`
 
-**Solutions:**
+**Fix (PowerShell)**
 
-**Option A: Kill the process using the helper script**
-```bash
-kill-port-3000.bat
+```powershell
+netstat -ano | findstr :3000
+taskkill /F /PID <PID>
 ```
 
-**Option B: Manual process termination**
-1. Find the process using port 3000:
-   ```bash
-   netstat -ano | findstr :3000
-   ```
-2. Note the PID (Process ID) in the last column
-3. Kill the process:
-   ```bash
-   taskkill /F /PID <PID_NUMBER>
-   ```
+If you run OPAL manually, you can also change `MCP_PORT` in `opal/.env` and update frontend URLs accordingly.
 
-**Option C: Change the OPAL server port**
-1. Open `opal/.env` (or create it if it doesn't exist)
-2. Add or modify:
-   ```
-   MCP_PORT=3001
-   ```
-3. Update the frontend to connect to the new port in `src/lib/opal-client.ts`
+### 2. OPAL Server Connection Failed
 
-### 2. CSS Import Order Error
+**Check list**
 
-**Error Message:**
-```
-@import must precede all other statements (besides @charset or empty @layer)
-```
-
-**Cause:** CSS `@import` statements must come before all other CSS rules, including Tailwind directives.
-
-**Solution:** Fixed in `src/index.css` - the `@import './styles/global-theme.css';` statement now comes first, before font declarations and Tailwind directives.
-
-### 3. OPAL Server Connection Failed
-
-**Error Message:**
-```
-Failed to connect to OPAL server
-```
-
-**Possible Causes & Solutions:**
-
-1. **OPAL server not running**
-   - Start the OPAL server: `cd opal && npm start`
-   - Or use the main `start.bat` which starts both
-
-2. **Wrong port configuration**
-   - Check `opal/.env` for `MCP_PORT` setting
-   - Verify frontend `src/lib/opal-client.ts` uses matching port
-
-3. **Firewall blocking connection**
-   - Add exception for Node.js in Windows Firewall
-   - Check antivirus settings
-
-### 4. Database Migration Errors
-
-**Error Message:**
-```
-Migration failed
-```
-
-**Solutions:**
-
-1. **Reset database (development only)**
-   ```bash
+1. In Tauri mode (`npm run tauri:dev`), OPAL should be auto-started by the desktop backend.
+2. In web/manual mode, start OPAL yourself:
+   ```powershell
    cd opal
-   rm dev.sqlite3
+   npm start
+   ```
+3. Verify health endpoint:
+   - `http://localhost:3000/health` (or your configured port)
+4. Confirm firewall/AV is not blocking local Node.js traffic.
+
+### 3. Authentication Errors (401 / missing token)
+
+**Symptoms**
+
+- Journal, notes, or memories fail to load/save.
+
+**Fixes**
+
+1. Sign out and sign back in.
+2. Open DevTools and confirm requests include `Authorization: Bearer ...`.
+3. If needed, clear local auth state and relaunch app.
+
+### 4. AI Feedback or Insights Not Generating
+
+**Check list**
+
+1. OPAL connection status is `ready` in app.
+2. API keys are configured in app settings or OPAL runtime environment.
+3. Selected model is valid for the configured provider.
+4. Inspect DevTools console for `get_ai_feedback` / `get_ai_insights` tool errors.
+
+### 5. Personas Not Showing Up
+
+Personas are database-backed and loaded via OPAL tools.
+
+**Fixes**
+
+1. Confirm OPAL is connected and authenticated.
+2. Open `Admin > AI Personas` and refresh/recreate personas.
+3. If the personas table is missing, rerun migrations:
+   ```powershell
+   cd opal
    npx knex migrate:latest
-   npx knex seed:run
    ```
 
-2. **Check migration files**
-   - Verify migration files in `opal/migrations/` are intact
-   - Ensure database file has write permissions
+### 6. Theme Not Applying
 
-3. **PostgreSQL connection issues (production)**
-   - Verify `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` in `.env`
-   - Test PostgreSQL connection manually
+**Symptoms**
 
-### 5. Tauri Build Errors
+- Wrong colors or theme not persisted.
 
-**Error Message:**
-```
-Failed to build Tauri application
-```
+**Fixes**
 
-**Solutions:**
-
-1. **Rust toolchain not installed or outdated**
-   ```bash
-   rustup update
-   ```
-
-2. **Missing WebView2 (Windows)**
-   - Install WebView2 Runtime: https://developer.microsoft.com/en-us/microsoft-edge/webview2/
-
-3. **Build dependencies missing**
-   ```bash
-   npm install
-   cd src-tauri
-   cargo build
-   ```
-
-### 6. API Key Issues
-
-**Error Message:**
-```
-OpenAI API request failed: 401 Unauthorized
-```
-
-**Solutions:**
-
-1. **Missing or invalid API key**
-   - Open Admin page in app
-   - Navigate to API Configuration
-   - Add valid OpenAI/Anthropic/Grok API key
-
-2. **API key not saved**
-   - Check browser localStorage in DevTools
-   - Key should be stored under `openai_api_key`
-
-3. **Rate limit exceeded**
-   - Check your API usage on provider's dashboard
-   - Wait for rate limit reset
-   - Consider upgrading API plan
-
-### 7. Journal Entries Not Saving
-
-**Possible Causes & Solutions:**
-
-1. **LocalStorage full**
-   - Check browser storage quota
-   - Clear old/unused data
-   - Export and delete old entries
-
-2. **Browser permissions**
-   - Ensure app has storage permissions
-   - Try clearing cache and reloading
-
-3. **Corrupted state**
-   - Open DevTools Console
-   - Clear localStorage: `localStorage.clear()`
-   - Restart application
-
-### 8. AI Feedback Not Generating
-
-**Error Message:**
-```
-Failed to generate AI feedback
-```
-
-**Check:**
-
-1. **API key configured** (see #6)
-2. **Entry selected** - Must select an entry before requesting feedback
-3. **Network connection** - Verify internet connectivity
-4. **API service status** - Check OpenAI/Anthropic status pages
-5. **Console errors** - Open DevTools and check for detailed error messages
-
-### 9. Theme Not Applying
-
-**Symptoms:** App looks unstyled or wrong colors
-
-**Solutions:**
-
-1. **CSS not loaded**
-   - Hard refresh: `Ctrl + Shift + R`
-   - Clear browser cache
-
-2. **Theme file missing**
-   - Verify `src/styles/global-theme.css` exists
-   - Check `src/index.css` imports it correctly
-
-3. **LocalStorage theme setting corrupted**
+1. Hard refresh / restart app.
+2. Remove stored theme key and reopen:
    ```javascript
-   // In DevTools Console
-   localStorage.removeItem('theme')
+   localStorage.removeItem('forge-theme-id')
    location.reload()
    ```
+3. Verify `src/lib/themeConfig.ts` and `src/components/ThemeProvider.tsx` are not out of sync.
 
-### 10. Dev Server Won't Start
+### 7. Database Migration Errors
 
-**Error Message:**
+**Reset dev database (destructive)**
+
+```powershell
+cd opal
+if (Test-Path .\dev.sqlite3) { Remove-Item .\dev.sqlite3 -Force }
+npx knex migrate:latest
+npx knex seed:run
 ```
-Port 1420 already in use
-```
 
-**Solutions:**
+If using PostgreSQL, verify all `DB_*` environment variables.
 
-1. **Kill Vite dev server**
-   - Find and kill Node.js process on port 1420
-   - `netstat -ano | findstr :1420`
-   - `taskkill /F /PID <PID>`
+### 8. Tauri Build Fails
 
-2. **Change Vite port**
-   - Edit `vite.config.ts`:
-   ```typescript
-   server: {
-     port: 1421 // or any available port
-   }
+**Fixes**
+
+1. Update toolchain:
+   ```powershell
+   rustup update
    ```
-   - Update `src-tauri/tauri.conf.json` `devUrl` to match
+2. Clean and rebuild:
+   ```powershell
+   cd src-tauri
+   cargo clean
+   cargo build
+   ```
+3. Ensure WebView2 runtime is installed on Windows.
 
-### 11. Windows PATH Issues
+### 9. Vite Dev Server Won't Start
 
-**Error Message:**
+**Symptoms**
+
+- Port conflict on 1420.
+
+**Fixes**
+
+```powershell
+netstat -ano | findstr :1420
+taskkill /F /PID <PID>
 ```
-'cargo' is not recognized as an internal or external command
-```
 
-**Solutions:**
+Or change Vite port in `vite.config.ts` and keep any Tauri dev URL config in sync.
 
-1. **Add Rust to PATH**
-   - The `start.bat` already adds: `set PATH=%PATH%;C:\Users\X1\.cargo\bin`
-   - Verify Rust is installed: `rustc --version`
+### 10. Notes / Journal / Core Entries Not Saving
 
-2. **Reinstall Rust**
-   - Download from: https://rustup.rs/
-   - Follow installation wizard
-   - Restart terminal/IDE
+These flows depend on OPAL REST endpoints and auth.
 
-### 12. Module Not Loading
+**Check list**
 
-**Symptoms:** Guided modules don't appear or won't start
+1. OPAL is running.
+2. User is authenticated.
+3. Endpoint is reachable:
+   - `/journal`
+   - `/notes`
+   - `/core` (memory routes)
+4. No backend exceptions in OPAL logs.
 
-**Solutions:**
+## Debug Workflow
 
-1. **Module definition error**
-   - Check `src/lib/modules.ts` for syntax errors
-   - Verify module IDs are unique
+1. Open DevTools (`F12`) and inspect Console + Network tabs.
+2. Check OPAL server logs in the terminal running `node src/server.js`.
+3. Verify app/runtime URLs from Tauri bridge commands when debugging desktop mode.
+4. Reproduce with minimal steps and capture exact error text.
 
-2. **State management issue**
-   - Clear module state: `localStorage.removeItem('selectedModule')`
-   - Reload application
-
-## Getting More Help
-
-### Enable Debug Mode
-
-1. Open DevTools: `Ctrl + Shift + I` or `F12`
-2. Check Console tab for errors
-3. Check Network tab for failed requests
-4. Check Application > Local Storage for state
-
-### Collect Debug Information
-
-When reporting issues, include:
-- Error message (full text)
-- Console logs (from DevTools)
-- Steps to reproduce
-- Operating system and version
-- Node.js version: `node --version`
-- npm version: `npm --version`
-- Rust version: `rustc --version`
-
-### Log Files
-
-**OPAL Server Logs:**
-- Located in `opal/logs/` (if configured)
-- Console output when running `npm start`
-
-**Tauri Logs:**
-- Console output from `npm run tauri:dev`
-- Rust build errors appear here
-
-### Reset Application to Defaults
-
-**Warning: This will delete all user data!**
+## Reset Application State (Destructive)
 
 ```javascript
-// In DevTools Console
 localStorage.clear()
 sessionStorage.clear()
 location.reload()
 ```
 
-Then restart OPAL server:
-```bash
+Then optionally reset OPAL dev DB:
+
+```powershell
 cd opal
-rm dev.sqlite3
+if (Test-Path .\dev.sqlite3) { Remove-Item .\dev.sqlite3 -Force }
 npx knex migrate:latest
 npx knex seed:run
 ```
 
-## Performance Issues
+## Collect Useful Debug Info
 
-### Slow AI Response Times
+When reporting an issue, include:
 
-1. **Try smaller model** (e.g., GPT-4o-mini instead of GPT-4o)
-2. **Check network speed**
-3. **Reduce entry length** (very long entries take longer to process)
-
-### High Memory Usage
-
-1. **Too many entries loaded** - Archive or export old entries
-2. **Memory leak** - Restart application
-3. **Browser DevTools open** - Close when not debugging
-
-### Slow Application Startup
-
-1. **Large database** - Clean up old data
-2. **Theme initialization slow** - Simplify custom themes
-3. **Too many modules** - Disable unused modules
-
-## Contact & Support
-
-For additional help:
-- GitHub Issues: [Create an issue](https://github.com/yourorg/forge/issues)
-- Email: support@forge.app
-- Documentation: Check `docs/README.md`
+- Exact error message
+- Steps to reproduce
+- OS + version
+- `node --version`
+- `npm --version`
+- `rustc --version`
+- Relevant console/network logs

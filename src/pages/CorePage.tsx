@@ -10,6 +10,7 @@ import { Plus, Filter, Archive, RefreshCw, Eye, EyeOff, ChevronLeft, ChevronRigh
 import CoreSidebar from '../components/core/CoreSidebar';
 import CoreViewer from '../components/core/CoreViewer';
 import CoreInsights from '../components/core/CoreInsights';
+import TerrainData from '../components/core/TerrainData';
 import AddMemoryModal from '../components/AddMemoryModal';
 import MemoriesVisualizations from '../components/memories/MemoriesVisualizations';
 import TagFilter from '../components/memories/TagFilter';
@@ -270,13 +271,17 @@ const CorePage: React.FC = () => {
                   <BarChart3 className="w-4 h-4" />
                   Insights
                 </TabsTrigger>
-                <TabsTrigger value="visualizations" className="flex items-center gap-2 text-zinc-400 data-[state=active]:bg-zinc-700 data-[state=active]:text-white">
-                  <ChartBar className="w-4 h-4" />
-                  Analytics
-                </TabsTrigger>
                 <TabsTrigger value="chat" className="flex items-center gap-2 text-zinc-400 data-[state=active]:bg-zinc-700 data-[state=active]:text-white">
                   <MessageCircle className="w-4 h-4" />
                   Chat
+                </TabsTrigger>
+                <TabsTrigger value="terrain" className="flex items-center gap-2 text-zinc-400 data-[state=active]:bg-zinc-700 data-[state=active]:text-white">
+                  <Hammer className="w-4 h-4" />
+                  TERRAIN
+                </TabsTrigger>
+                <TabsTrigger value="visualizations" className="flex items-center gap-2 text-zinc-400 data-[state=active]:bg-zinc-700 data-[state=active]:text-white">
+                  <ChartBar className="w-4 h-4" />
+                  Analytics
                 </TabsTrigger>
               </TabsList>
               
@@ -326,6 +331,10 @@ const CorePage: React.FC = () => {
             
             <TabsContent value="chat" className="m-0 flex-1 min-h-0 overflow-hidden">
               <ChatInterface className="h-full" memories={memories} />
+            </TabsContent>
+            
+            <TabsContent value="terrain" className="m-0 flex-1 min-h-0 overflow-auto p-6">
+              <TerrainData />
             </TabsContent>
           </Tabs>
         </div>
